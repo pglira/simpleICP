@@ -4,13 +4,13 @@ This repo contains implementations of a rather simple version of the [Iterative 
 
 Currently, an implementation is available in:
 
-| Language | Main dependencies |
-| --- | --- |
-| [C++](c++) | [nanoflann](https://github.com/jlblancoc/nanoflann), [Eigen](http://eigen.tuxfamily.org) |
-| [Julia](julia) | [NearestNeighbors.jl](https://github.com/KristofferC/NearestNeighbors.jl) |
-| [Matlab](matlab) | [Statistics and Machine Learning Toolbox](https://www.mathworks.com/products/statistics.html) |
-| [Octave](octave) | |
-| [Python](python) | |
+| Language | Code | Main dependencies |
+| --- | --- | --- |
+| C++ | [Link](c++) | [nanoflann](https://github.com/jlblancoc/nanoflann), [Eigen](http://eigen.tuxfamily.org) |
+| Julia | [Link](julia) | [NearestNeighbors.jl](https://github.com/KristofferC/NearestNeighbors.jl) |
+| Matlab | [Link](matlab) | [Statistics and Machine Learning Toolbox](https://www.mathworks.com/products/statistics.html) |
+| Octave | [Link](octave) | |
+| Python | [Link](python) | |
 
 I've tried to optimize the readability of the code, i.e. the code structure is as simple as possible and tests are rather rare.
 
