@@ -107,4 +107,3 @@ Please cite related papers if you use this code:
 
 - [ ] Add a nice animation
 - [ ] Add outline of the algorithm
-- [ ] Add more test data sets
