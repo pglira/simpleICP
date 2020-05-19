@@ -107,5 +107,4 @@ Please cite related papers if you use this code:
 
 ## Todo
 
-- [ ] Add a nice animation
 - [ ] Add outline of the algorithm
