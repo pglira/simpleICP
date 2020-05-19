@@ -1,2 +1,104 @@
-# simpleicp
-Implementations of a rather simple version of the Iterative Closest Point algorithm in various languages.
+# simpleICP
+
+This repo contains implementations of a rather simple version of the [Iterative Closest Point (ICP) algorithm](https://en.wikipedia.org/wiki/Iterative_closest_point) in various languages.
+
+Currently, an implementation is available in:
+
+- C++
+- Julia
+- Matlab
+- Octave
+- Python
+
+I've tried to optimize the readability of the code, i.e. the code structure is as simple as possible and tests are rather rare.
+
+## Features of the ICP algorithm
+
+- Usage of the signed **point-to-plane distance** (instead of the point-to-point distance) as error metric. Main reasons:
+  - higher convergence speed, see e.g. [here](https://www.youtube.com/watch?v=LcghboLgTiA) and [here](https://ieeexplore.ieee.org/abstract/document/924423)
+  - better final point cloud alignment (under the assumption that both point clouds are differently sampled, i.e. no real point-to-point correspondences exist)
+- Estimation of a **rigid-body transformation** (rotation + translation) for the movable point cloud. The final transformation is given as homogeneous transformation matrix H:
+  ```
+  H = [R(0,0) R(0,1) R(0,2)   tx]
+      [R(1,0) R(1,1) R(1,2)   ty]
+      [R(2,0) R(2,1) R(2,2)   tz]
+      [     0      0      0    1]
+  ```
+  where ``R`` is the rotation matrix and ``tx``, ``ty``, and ``tz`` are the components of the translation vector. Using ``H``, the movable point cloud can be transformed with:
+  ```
+  Xt = H*X
+  ```
+  where ``X`` is a 4-by-n matrix holding in each column the homogeneous coordinates ``x``, ``y``, ``z``, ``1`` of a single point, and ``Xt`` is the resulting 4-by-n matrix with the transformed points.
+- Selection of a **fixed number of correspondences** between the fixed and the movable point cloud. Default is ``correspondences = 1000``.
+- Automatic **rejection of potentially wrong correspondences** on the basis of the [median of absolute deviations](https://en.wikipedia.org/wiki/Median_absolute_deviation). A correspondence ``i`` is rejected if ``|dist_i-median(dists)| > 3*sig_mad``, where ``sig_mad = 1.4826*mad(dists)``.
+- After each iteration a **convergence criteria** is tested: if the mean and the standard deviation of the point-to-plane distances do not change more than ``min_change`` percent, the iteration is stopped. Default is ``min_change = 1``.
+- The normal vector of the plane (needed to compute the point-to-plane distance) is estimated using a fixed number of neighbors. Default is ``neighbors = 10``.
+
+## Output
+
+All implementations generate the same output. This is an example from the C++ version for the *Dragon* dataset:
+
+```
+> run_simpleicp
+[10:34:10.277] Create point cloud objects ...
+[10:34:10.278] Select points for correspondences in fixed point cloud ...
+[10:34:10.278] Estimate normals of selected points ...
+[10:34:10.291] Start iterations ...
+[10:34:10.310] Iteration | correspondences | mean(residuals) |  std(residuals)
+[10:34:10.310]         0 |             984 |          0.0388 |          0.3160
+[10:34:10.310]         1 |             984 |          0.0011 |          0.2520
+[10:34:10.327]         2 |             996 |          0.0014 |          0.1630
+[10:34:10.342]         3 |             993 |          0.0059 |          0.0751
+[10:34:10.357]         4 |             974 |          0.0007 |          0.0148
+[10:34:10.373]         5 |             980 |          0.0001 |          0.0021
+[10:34:10.388]         6 |             996 |          0.0001 |          0.0021
+[10:34:10.404] Convergence criteria fulfilled -> stop iteration!
+[10:34:10.404] Estimated transformation matrix H:
+[10:34:10.404] [    0.998657     0.052625    -0.034241    -0.204408]
+[10:34:10.404] [   -0.052121     0.998995     0.019899    -0.407677]
+[10:34:10.404] [    0.034893    -0.018484     0.999439    -0.594463]
+[10:34:10.404] [    0.000000     0.000000     0.000000     1.000000]
+[10:34:10.404] Finished in 0.127 seconds!
+```
+
+## Test data sets
+
+The test data sets are included in the ``data`` subfolder. An example call for each language can be found in the ``run_simpleicp*`` files, e.g. ``run_simpleicp.py`` for the python version.
+
+- *Dragon*: ``dragon1.xyz`` & ``dragon2.xyz``
+
+### Benchmark
+
+These are the runtimes on my PC for the data sets above:
+
+| Dataset | C++ | Julia | Matlab | Octave* | Python |
+| --- | --- | --- | --- | --- | --- |
+| *Dragon* | 0.13s | 0.40s | 0.72s | 83.7s | 0.45s |
+
+\* Unfortunately, I haven't found an implementation of a kd tree in Octave (it is not yet implemented in the [Statistics](https://wiki.octave.org/Statistics_package) package). Thus, a (very time-consuming!) exhaustive nearest neighbor search is used instead.
+
+For all input parameters (``correspondences``, ``neighbors``, ...) the default values have been used.
+
+## References
+
+Please cite related papers if you use this code:
+```
+@article{glira2015a,
+  title={A Correspondence Framework for ALS Strip Adjustments based on Variants of the ICP Algorithm},
+  author={Glira, Philipp and Pfeifer, Norbert and Briese, Christian and Ressl, Camillo},
+  journal={Photogrammetrie-Fernerkundung-Geoinformation},
+  volume={2015},
+  number={4},
+  pages={275--289},
+  year={2015},
+  publisher={E. Schweizerbart'sche Verlagsbuchhandlung}
+}
+```
+
+## Todo
+
+- [ ] Add links to code
+- [ ] Add images of datasets
+- [ ] Add a nice animation
+- [ ] Add outline of the algorithm
+- [ ] Add more test data sets
