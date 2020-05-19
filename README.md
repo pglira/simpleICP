@@ -5,8 +5,8 @@ This repo contains implementations of a rather simple version of the [Iterative 
 Currently, an implementation is available in:
 
 - [C++](c++) (dependencies: [nanoflann](https://github.com/jlblancoc/nanoflann), [Eigen](http://eigen.tuxfamily.org))
-- [Julia](julia)
-- [Matlab](matlab)
+- [Julia](julia) (dependency: [NearestNeighbors.jl](https://github.com/KristofferC/NearestNeighbors.jl))
+- [Matlab](matlab) (dependency: [Statistics and Machine Learning Toolbox](https://www.mathworks.com/products/statistics.html))
 - [Octave](octave)
 - [Python](python)
 
