@@ -4,9 +4,9 @@ This repo contains implementations of a rather simple version of the [Iterative 
 
 Currently, an implementation is available in:
 
-- [C++](c++) (dependencies: [nanoflann](https://github.com/jlblancoc/nanoflann), [Eigen](http://eigen.tuxfamily.org))
-- [Julia](julia)
-- [Matlab](matlab)
+- [C++](c++) (main dependencies: [nanoflann](https://github.com/jlblancoc/nanoflann), [Eigen](http://eigen.tuxfamily.org))
+- [Julia](julia) (main dependency: [NearestNeighbors.jl](https://github.com/KristofferC/NearestNeighbors.jl))
+- [Matlab](matlab) (main dependency: [Statistics and Machine Learning Toolbox](https://www.mathworks.com/products/statistics.html))
 - [Octave](octave)
 - [Python](python)
 
@@ -65,9 +65,10 @@ All implementations generate the same output. This is an example from the C++ ve
 
 The test data sets are included in the [data](data) subfolder. An example call for each language can be found in the ``run_simpleicp.*`` files, e.g. [run_simpleicp.py](python/run_simpleicp.py) for the python version.
 
-| Dataset | | PC1 (no_pts) | PC2 (no_pts) |
-| --- | --- | --- | --- |
-| *Dragon* | ![Dragon](/data/dragon_small.png) | ``dragon1.xyz`` (100k) | ``dragon2.xyz`` (100k) |
+| Dataset | | PC1 (no_pts) | PC2 (no_pts) | Source |
+| --- | --- | --- | --- | --- |
+| *Dragon* | ![Dragon](/data/dragon_small.png) | [``dragon1.xyz``](data/dragon1.xyz) (100k) | [``dragon2.xyz``](data/dragon2.xyz) (100k) | [The Stanford 3D Scanning Repository](http://graphics.stanford.edu/data/3Dscanrep/) |
+| *Dragon* | ![Dragon](/data/airborne_lidar_small.png) | [``airborne_lidar1.xyz``](data/airborne_lidar1.xyz) (1340k) | [``airborne_lidar2.xyz``](data/airborne_lidar2.xyz) (1340k) | Airborne lidar over Austrian Alps |
 
 ### Benchmark
 
@@ -75,7 +76,8 @@ These are the runtimes on my PC for the data sets above:
 
 | Dataset | C++ | Julia | Matlab | Octave* | Python |
 | --- | --- | --- | --- | --- | --- |
-| *Dragon* | 0.13s | 0.40s | 0.72s | 83.7s | 0.45s |
+| *Dragon*         | 0.13s | 0.40s |  0.72s | 83.7s |  0.45s |
+| *Airborne Lidar* | 4.08s | 5.04s | 19.80s |       | 73.39s |
 
 \* Unfortunately, I haven't found an implementation of a kd tree in Octave (it is not yet implemented in the [Statistics](https://wiki.octave.org/Statistics_package) package). Thus, a (very time-consuming!) exhaustive nearest neighbor search is used instead.
 
