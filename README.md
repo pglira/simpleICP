@@ -4,7 +4,7 @@ This repo contains implementations of a rather simple version of the [Iterative 
 
 Currently, an implementation is available in:
 
-- [C++](c++) (dependency: [nanoflann](https://github.com/jlblancoc/nanoflann))
+- [C++](c++) (dependencies: [nanoflann](https://github.com/jlblancoc/nanoflann), [Eigen](http://eigen.tuxfamily.org)
 - [Julia](julia)
 - [Matlab](matlab)
 - [Octave](octave)
