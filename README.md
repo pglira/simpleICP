@@ -1,5 +1,7 @@
 # simpleICP
 
+![simpleICP](data/dragon_iterations.png)
+
 This repo contains implementations of a rather simple version of the [Iterative Closest Point (ICP) algorithm](https://en.wikipedia.org/wiki/Iterative_closest_point) in various languages.
 
 Currently, an implementation is available in:
