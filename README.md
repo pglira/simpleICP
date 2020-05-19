@@ -68,7 +68,7 @@ The test data sets are included in the [data](data) subfolder. An example call f
 | Dataset | | PC1 (no_pts) | PC2 (no_pts) | Source |
 | --- | --- | --- | --- | --- |
 | *Dragon* | ![Dragon](/data/dragon_small.png) | [``dragon1.xyz``](data/dragon1.xyz) (100k) | [``dragon2.xyz``](data/dragon2.xyz) (100k) | [The Stanford 3D Scanning Repository](http://graphics.stanford.edu/data/3Dscanrep/) |
-| *Dragon* | ![Dragon](/data/airborne_lidar_small.png) | [``airborne_lidar1.xyz``](data/airborne_lidar1.xyz) (1340k) | [``airborne_lidar2.xyz``](data/airborne_lidar2.xyz) (1340k) | Airborne lidar over Austrian Alps |
+| *Airborne Lidar* | ![Dragon](/data/airborne_lidar_small.png) | [``airborne_lidar1.xyz``](data/airborne_lidar1.xyz) (1340k) | [``airborne_lidar2.xyz``](data/airborne_lidar2.xyz) (1340k) | Airborne lidar over Austrian Alps |
 
 ### Benchmark
 
