@@ -65,7 +65,9 @@ All implementations generate the same output. This is an example from the C++ ve
 
 The test data sets are included in the [data](data) subfolder. An example call for each language can be found in the ``run_simpleicp.*`` files, e.g. [run_simpleicp.py](python/run_simpleicp.py) for the python version.
 
-- *Dragon*: ``dragon1.xyz`` & ``dragon2.xyz``
+| Dataset | | PC1 (no_pts) | PC2 (no_pts) |
+| --- | --- | --- | --- |
+| *Dragon* | ![Dragon](/data/dragon_small.png) | ``dragon1.xyz`` (100k) | ``dragon2.xyz`` (100k) |
 
 ### Benchmark
 
