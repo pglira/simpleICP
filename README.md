@@ -68,7 +68,7 @@ The test data sets are included in the [data](data) subfolder. An example call f
 | Dataset | | PC1 (no_pts) | PC2 (no_pts) | Source |
 | --- | --- | --- | --- | --- |
 | *Dragon* | ![Dragon](/data/dragon_small.png) | [``dragon1.xyz``](data/dragon1.xyz) (100k) | [``dragon2.xyz``](data/dragon2.xyz) (100k) | [The Stanford 3D Scanning Repository](http://graphics.stanford.edu/data/3Dscanrep/) |
-| *Airborne Lidar* | ![Dragon](/data/airborne_lidar_small.png) | [``airborne_lidar1.xyz``](data/airborne_lidar1.xyz) (1340k) | [``airborne_lidar2.xyz``](data/airborne_lidar2.xyz) (1340k) | Airborne lidar over Austrian Alps |
+| *Airborne Lidar* | ![Dragon](/data/airborne_lidar_small.png) | [``airborne_lidar1.xyz``](data/airborne_lidar1.xyz) (1340k) | [``airborne_lidar2.xyz``](data/airborne_lidar2.xyz) (1340k) | Airborne Lidar fligth campaign over Austrian Alps |
 
 ### Benchmark
 
@@ -79,9 +79,9 @@ These are the runtimes on my PC for the data sets above:
 | *Dragon*         | 0.13s | 0.40s |  0.72s | 83.7s |  0.45s |
 | *Airborne Lidar* | 4.08s | 5.04s | 19.80s | -     | 73.39s |
 
-\* Unfortunately, I haven't found an implementation of a kd tree in Octave (it is not yet implemented in the [Statistics](https://wiki.octave.org/Statistics_package) package). Thus, a (very time-consuming!) exhaustive nearest neighbor search is used instead. For larger datasets the Octave timings are missing, as the distance matrix does not fit into memory.
-
 For all input parameters (``correspondences``, ``neighbors``, ...) the default values have been used.
+
+\* Unfortunately, I haven't found an implementation of a kd tree in Octave (it is not yet implemented in the [Statistics](https://wiki.octave.org/Statistics_package) package). Thus, a (very time-consuming!) exhaustive nearest neighbor search is used instead. For larger datasets the Octave timings are missing, as the distance matrix does not fit into memory.
 
 ## References
 
@@ -101,7 +101,6 @@ Please cite related papers if you use this code:
 
 ## Todo
 
-- [ ] Add images of datasets
 - [ ] Add a nice animation
 - [ ] Add outline of the algorithm
 - [ ] Add more test data sets
