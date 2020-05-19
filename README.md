@@ -77,9 +77,9 @@ These are the runtimes on my PC for the data sets above:
 | Dataset | C++ | Julia | Matlab | Octave* | Python |
 | --- | --- | --- | --- | --- | --- |
 | *Dragon*         | 0.13s | 0.40s |  0.72s | 83.7s |  0.45s |
-| *Airborne Lidar* | 4.08s | 5.04s | 19.80s |       | 73.39s |
+| *Airborne Lidar* | 4.08s | 5.04s | 19.80s | -     | 73.39s |
 
-\* Unfortunately, I haven't found an implementation of a kd tree in Octave (it is not yet implemented in the [Statistics](https://wiki.octave.org/Statistics_package) package). Thus, a (very time-consuming!) exhaustive nearest neighbor search is used instead.
+\* Unfortunately, I haven't found an implementation of a kd tree in Octave (it is not yet implemented in the [Statistics](https://wiki.octave.org/Statistics_package) package). Thus, a (very time-consuming!) exhaustive nearest neighbor search is used instead. For larger datasets the Octave timings are missing, as the distance matrix does not fit into memory.
 
 For all input parameters (``correspondences``, ``neighbors``, ...) the default values have been used.
 
