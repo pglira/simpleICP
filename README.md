@@ -110,6 +110,7 @@ Please cite related papers if you use this code:
 - [ ] Add outline of the algorithm
 - [ ] Use planarity as rejection criteria
 - [ ] Consider partial overlap of point clouds
+- [ ] Generate command line tool for C++ implementation
 
 ## Related projects
 
