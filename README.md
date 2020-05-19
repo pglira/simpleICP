@@ -71,7 +71,7 @@ The test data sets are included in the [data](data) subfolder. An example call f
 | :--- | --- | --- | --- | --- |
 | *Dragon* | ![Dragon](/data/dragon_small.png) | [``dragon1.xyz``](data/dragon1.xyz) (100k) | [``dragon2.xyz``](data/dragon2.xyz) (100k) | [The Stanford 3D Scanning Repository](http://graphics.stanford.edu/data/3Dscanrep/) |
 | *Airborne Lidar* | ![AirborneLidar](/data/airborne_lidar_small.png) | [``airborne_lidar1.xyz``](data/airborne_lidar1.xyz) (1340k) | [``airborne_lidar2.xyz``](data/airborne_lidar2.xyz) (1340k) | Airborne Lidar fligth campaign over Austrian Alps |
-| *Terrestrial Lidar* | ![TerrestrialLidar](/data/terrestrial_lidar_small.png) | [``terrestrial_lidar1.xyz``](data/terrestrial_lidar1.xyz) (1250k) | [``terrestrial_lidar2.xyz``](data/terrestrial_lidar2.xyz) (1250k) | Terrestrial Lidar |
+| *Terrestrial Lidar* | ![TerrestrialLidar](/data/terrestrial_lidar_small.png) | [``terrestrial_lidar1.xyz``](data/terrestrial_lidar1.xyz) (1250k) | [``terrestrial_lidar2.xyz``](data/terrestrial_lidar2.xyz) (1250k) | Terrestrial Lidar point clouds of a stone block|
 
 ### Benchmark
 
