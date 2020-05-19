@@ -108,6 +108,8 @@ Please cite related papers if you use this code:
 ## Todo
 
 - [ ] Add outline of the algorithm
+- [ ] Use planarity as rejection criteria
+- [ ] Consider partial overlap of point clouds
 
 ## Related projects
 
