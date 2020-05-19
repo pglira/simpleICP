@@ -70,7 +70,8 @@ The test data sets are included in the [data](data) subfolder. An example call f
 | Dataset | | PC1 (no_pts) | PC2 (no_pts) | Source |
 | :--- | --- | --- | --- | --- |
 | *Dragon* | ![Dragon](/data/dragon_small.png) | [``dragon1.xyz``](data/dragon1.xyz) (100k) | [``dragon2.xyz``](data/dragon2.xyz) (100k) | [The Stanford 3D Scanning Repository](http://graphics.stanford.edu/data/3Dscanrep/) |
-| *Airborne Lidar* | ![Dragon](/data/airborne_lidar_small.png) | [``airborne_lidar1.xyz``](data/airborne_lidar1.xyz) (1340k) | [``airborne_lidar2.xyz``](data/airborne_lidar2.xyz) (1340k) | Airborne Lidar fligth campaign over Austrian Alps |
+| *Airborne Lidar* | ![AirborneLidar](/data/airborne_lidar_small.png) | [``airborne_lidar1.xyz``](data/airborne_lidar1.xyz) (1340k) | [``airborne_lidar2.xyz``](data/airborne_lidar2.xyz) (1340k) | Airborne Lidar fligth campaign over Austrian Alps |
+| *Terrestrial Lidar* | ![TerrestrialLidar](/data/terrestrial_lidar_small.png) | [``terrestrial_lidar1.xyz``](data/terrestrial_lidar1.xyz) (1250k) | [``terrestrial_lidar2.xyz``](data/terrestrial_lidar2.xyz) (1250k) | Terrestrial Lidar |
 
 ### Benchmark
 
@@ -78,8 +79,9 @@ These are the runtimes on my PC for the data sets above:
 
 | Dataset | C++ | Julia | Matlab | Octave* | Python |
 | :--- | ---: | ---: | ---: | ---: | ---: |
-| *Dragon*         | 0.13s | 0.40s |  0.72s | 83.7s |  0.45s |
-| *Airborne Lidar* | 4.08s | 5.04s | 19.80s | -     | 73.39s |
+| *Dragon*            | 0.13s | 0.40s |  0.72s | 83.7s |  0.45s |
+| *Airborne Lidar*    | 4.08s | 5.04s | 19.80s | -     | 73.39s |
+| *Terrestrial Lidar* | 3.25s | bug   | 20.01s | -     |  6.20s |
 
 For all input parameters (``correspondences``, ``neighbors``, ...) the default values have been used.
 
