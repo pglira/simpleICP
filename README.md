@@ -4,11 +4,11 @@ This repo contains implementations of a rather simple version of the [Iterative 
 
 Currently, an implementation is available in:
 
-- C++
-- Julia
-- Matlab
-- Octave
-- Python
+- [C++](c++)
+- [Julia](julia)
+- [Matlab](matlab)
+- [Octave](octave)
+- [Python](python)
 
 I've tried to optimize the readability of the code, i.e. the code structure is as simple as possible and tests are rather rare.
 
@@ -63,7 +63,7 @@ All implementations generate the same output. This is an example from the C++ ve
 
 ## Test data sets
 
-The test data sets are included in the ``data`` subfolder. An example call for each language can be found in the ``run_simpleicp*`` files, e.g. ``run_simpleicp.py`` for the python version.
+The test data sets are included in the [data](data) subfolder. An example call for each language can be found in the ``run_simpleicp.*`` files, e.g. ``run_simpleicp.py`` for the python version.
 
 - *Dragon*: ``dragon1.xyz`` & ``dragon2.xyz``
 
@@ -97,7 +97,6 @@ Please cite related papers if you use this code:
 
 ## Todo
 
-- [ ] Add links to code
 - [ ] Add images of datasets
 - [ ] Add a nice animation
 - [ ] Add outline of the algorithm
