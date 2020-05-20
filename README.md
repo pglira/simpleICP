@@ -105,13 +105,13 @@ Please cite related papers if you use this code:
 }
 ```
 
+## Related projects
+
+- [globalICP](https://github.com/pglira/Point_cloud_tools_for_Matlab): A multi-scan ICP implementation for Matlab
+
 ## Todo
 
 - [ ] Add outline of the algorithm
 - [ ] Use planarity as rejection criteria
 - [ ] Consider partial overlap of point clouds
 - [ ] Generate command line tool for C++ implementation
-
-## Related projects
-
-- [globalICP](https://github.com/pglira/Point_cloud_tools_for_Matlab): A multi-scan ICP implementation for Matlab
