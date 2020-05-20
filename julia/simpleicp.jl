@@ -52,10 +52,15 @@ function estimate_normals!(pc::PointCloud, neighbors)
 
     for (i, idxNN) in enumerate(idxNN_all_qp)
         selected_points = [pc.x[idxNN]'; pc.y[idxNN]'; pc.z[idxNN]']
-        P = fit(PCA, selected_points, pratio=1.0)
-        pc.nx[pc.sel[i]] = projection(P)[1,3]
-        pc.ny[pc.sel[i]] = projection(P)[2,3]
-        pc.nz[pc.sel[i]] = projection(P)[3,3]
+        # P = fit(PCA, selected_points, pratio=1.0)
+        # pc.nx[pc.sel[i]] = projection(P)[1,3]
+        # pc.ny[pc.sel[i]] = projection(P)[2,3]
+        # pc.nz[pc.sel[i]] = projection(P)[3,3]
+        C = cov(selected_points, dims=2)
+        F = eigen(C)
+        pc.nx[pc.sel[i]] = F.vectors[1,1]
+        pc.ny[pc.sel[i]] = F.vectors[2,1]
+        pc.nz[pc.sel[i]] = F.vectors[3,1]
     end
 
 end

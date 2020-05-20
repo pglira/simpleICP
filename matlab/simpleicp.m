@@ -69,6 +69,7 @@ function H = simpleicp(XFix, XMov, nva)
 
 end
 
+
 function log(text)
 
     logtime = datestr(now, 'HH:MM:SS.FFF');
