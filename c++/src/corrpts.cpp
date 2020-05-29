@@ -5,9 +5,6 @@ CorrPts::CorrPts(PointCloud& pc1, PointCloud& pc2): pc1_{pc1}, pc2_{pc2} {}
 
 void CorrPts::Match() {
 
-  auto sel_idx_pc1 = pc1_.GetIdxOfSelectedPts();
-  auto sel_idx_pc2 = pc2_.GetIdxOfSelectedPts();
-
   auto X_sel_pc1 = pc1_.GetXOfSelectedPts();
   auto X_sel_pc2 = pc2_.GetXOfSelectedPts();
 
@@ -20,7 +17,15 @@ void CorrPts::Match() {
     idx_pc2_[i] = mat_idx_nn(i,0);
   }
 
+  GetPlanarityFromPc1();
   ComputeDists();
+}
+
+void CorrPts::GetPlanarityFromPc1() {
+  planarity_ = VectorXd(idx_pc1_.size());
+  for (int i = 0; i < idx_pc1_.size(); i++) {
+    planarity_[i] = pc1_.planarity()[idx_pc1_[i]];
+  }
 }
 
 void CorrPts::ComputeDists() {
@@ -48,12 +53,12 @@ void CorrPts::ComputeDists() {
   }
 }
 
-void CorrPts::Reject() {
+void CorrPts::Reject(const double& min_planarity) {
   auto med {Median(dists_)};
   auto sigmad {1.4826 * MAD(dists_)};
   std::vector<bool> keep(dists_.size(), true);
   for (int i = 0; i < dists_.size(); i++) {
-    if (abs(dists_[i]-med) > 3*sigmad) {
+    if ((abs(dists_[i]-med) > 3*sigmad) | (planarity_[i] < min_planarity)) {
       keep[i] = false;
     }
   }

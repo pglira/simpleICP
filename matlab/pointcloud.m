@@ -9,6 +9,7 @@ classdef pointcloud < handle
         nx
         ny
         nz
+        planarity
 
         noPoints
         sel
@@ -42,6 +43,7 @@ classdef pointcloud < handle
             obj.nx = NaN(obj.noPoints,1);
             obj.ny = NaN(obj.noPoints,1);
             obj.nz = NaN(obj.noPoints,1);
+            obj.planarity = NaN(obj.noPoints,1);
 
             idxNN = knnsearch(...
                 [obj.x obj.y obj.z], ...
@@ -50,10 +52,11 @@ classdef pointcloud < handle
 
             for i = 1:numel(obj.sel)
                 C = cov([obj.x(idxNN(i,:)) obj.y(idxNN(i,:)) obj.z(idxNN(i,:))]);
-                P = pcacov(C);
+                [P, latent] = pcacov(C);
                 obj.nx(obj.sel(i)) = P(1,3);
                 obj.ny(obj.sel(i)) = P(2,3);
                 obj.nz(obj.sel(i)) = P(3,3);
+                obj.planarity(obj.sel(i)) = (latent(2)-latent(3))/latent(1);
             end
 
         end

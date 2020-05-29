@@ -16,6 +16,7 @@ mutable struct PointCloud
     nx::Vector{Float64}
     ny::Vector{Float64}
     nz::Vector{Float64}
+    planarity::Vector{Float64}
 
     no_points::Int64
     sel::Vector{Int64}
@@ -25,6 +26,7 @@ mutable struct PointCloud
         new(x,
             y,
             z,
+            fill(NaN, no_points),
             fill(NaN, no_points),
             fill(NaN, no_points),
             fill(NaN, no_points),
@@ -57,10 +59,11 @@ function estimate_normals!(pc::PointCloud, neighbors)
         # pc.ny[pc.sel[i]] = projection(P)[2,3]
         # pc.nz[pc.sel[i]] = projection(P)[3,3]
         C = cov(selected_points, dims=2)
-        F = eigen(C)
+        F = eigen(C) # eigenvalues are in ascending order
         pc.nx[pc.sel[i]] = F.vectors[1,1]
         pc.ny[pc.sel[i]] = F.vectors[2,1]
         pc.nz[pc.sel[i]] = F.vectors[3,1]
+        pc.planarity[pc.sel[i]] = (F.values[2]-F.values[1])/F.values[3];
     end
 
 end
@@ -102,11 +105,18 @@ function matching!(pcmov::PointCloud, pcfix)
 
 end
 
-function reject!(pcmov::PointCloud, pcfix::PointCloud, distances)
+function reject!(pcmov::PointCloud, pcfix::PointCloud, min_planarity, distances)
+
+    planarity = pcfix.planarity[pcfix.sel]
 
     med = median(distances)
     sigmad = mad(distances, normalize=true)
-    keep = [abs(distance-med) <= 3*sigmad for distance in distances]
+
+    keep_distance = [abs(d-med) <= 3*sigmad for d in distances]
+    keep_planarity = [p > min_planarity for p in planarity]
+
+    keep = keep_distance .& keep_planarity
+
     pcmov.sel = pcmov.sel[keep]
     pcfix.sel = pcfix.sel[keep]
     deleteat!(distances, .!keep)
@@ -183,12 +193,14 @@ end
 function simpleicp(X_fix::Array, X_mov::Array;
                    correspondences::Integer=1000,
                    neighbors::Integer=10,
-                   min_change::Number=1,
+                   min_planarity::Number=0.3,
+                   min_change::Number=3,
                    max_iterations::Integer=100)
 
     size(X_fix)[2] == 3 || error(""""X_fix" must have 3 columns""")
     size(X_mov)[2] == 3 || error(""""X_mov" must have 3 columns""")
     correspondences >= 10 || error(""""correspondences" must be >= 10""")
+    min_planarity >= 0 && min_planarity < 1 || error(""""min_planarity" must be >= 0 and < 1""")
     neighbors >= 2 || error(""""neighbors" must be >= 2""")
     min_change > 0 || error(""""min_change" must be > 0""")
     max_iterations > 0 || error(""""max_iterations" must be > 0""")
@@ -213,7 +225,7 @@ function simpleicp(X_fix::Array, X_mov::Array;
 
             initial_distances = matching!(pcmov, pcfix)
 
-            reject!(pcmov, pcfix, initial_distances)
+            reject!(pcmov, pcfix, min_planarity, initial_distances)
 
             dH, residuals = estimate_rigid_body_transformation(
                 pcfix.x[pcfix.sel], pcfix.y[pcfix.sel], pcfix.z[pcfix.sel],

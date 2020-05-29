@@ -28,6 +28,7 @@ class PointCloud {
     const VectorXd& nx();
     const VectorXd& ny();
     const VectorXd& nz();
+    const VectorXd& planarity();
     const std::vector<bool>& sel();
 
   private:
@@ -35,6 +36,7 @@ class PointCloud {
     VectorXd nx_;
     VectorXd ny_;
     VectorXd nz_;
+    VectorXd planarity_;
     std::vector<bool> sel_;
 };
 

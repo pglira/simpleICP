@@ -7,7 +7,8 @@ const int LEAF_SIZE {200};
 
 Matrix<double, 4, 4> SimpleICP(const MatrixXd& X_fix, const MatrixXd& X_mov,
                                const int& correspondences, const int& neighbors,
-                               const int& min_change, const int& max_iterations) {
+                               const double& min_planarity, const int& min_change,
+                               const int& max_iterations) {
 
   auto start = std::chrono::system_clock::now();
 
@@ -35,7 +36,7 @@ Matrix<double, 4, 4> SimpleICP(const MatrixXd& X_fix, const MatrixXd& X_mov,
     CorrPts cp = CorrPts(pc_fix, pc_mov);
 
     cp.Match();
-    cp.Reject();
+    cp.Reject(min_planarity);
     auto initial_dists {cp.dists()};
 
     cp.EstimateRigidBodyTransformation(dH, residual_dists);

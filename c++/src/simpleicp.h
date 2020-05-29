@@ -12,7 +12,8 @@ using namespace Eigen;
 
 Matrix<double, 4, 4> SimpleICP(const MatrixXd& X_fix, const MatrixXd& X_mov,
                                const int& correspondences = 1000, const int& neighbors = 10,
-                               const int& min_change = 1, const int& max_iterations = 100);
+                               const double& min_planarity = 0.3, const int& min_change = 1,
+                               const int& max_iterations = 100);
 
 MatrixXd ImportXYZFileToMatrix(const std::string& path_to_pc);
 

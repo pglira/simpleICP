@@ -7,7 +7,9 @@ function H = simpleicp(XFix, XMov, nva)
             mustBeGreaterThanOrEqual(nva.correspondences, 10)} = 1000;
         nva.neighbors(1,1) {mustBeInteger, ...
             mustBeGreaterThanOrEqual(nva.neighbors, 2)} = 10;
-        nva.minChange(1,1) {mustBePositive, mustBeReal} = 1;
+        nva.minPlanarity(1,1) {mustBeGreaterThanOrEqual(nva.minPlanarity, 0), mustBeReal, ...
+            mustBeLessThan(nva.minPlanarity, 1)} = 0.3;
+        nva.minChange(1,1) {mustBePositive, mustBeReal} = 3;
         nva.maxIterations(1,1) {mustBePositive, mustBeInteger} = 100;
     end
 
@@ -30,7 +32,7 @@ function H = simpleicp(XFix, XMov, nva)
 
         initialDistances = matching(pcFix, pcMov);
 
-        initialDistances = reject(pcFix, pcMov, initialDistances);
+        initialDistances = reject(pcFix, pcMov, nva.minPlanarity, initialDistances);
 
         [dH, residualDistances{i}] = estimateRigidBodyTransformation(...
             pcFix.x(pcFix.sel), pcFix.y(pcFix.sel), pcFix.z(pcFix.sel), ...
@@ -90,11 +92,18 @@ function distances = matching(pcFix, pcMov)
 
 end
 
-function distances = reject(pcFix, pcMov, distances)
+function distances = reject(pcFix, pcMov, minPlanarity, distances)
+
+    planarity = pcFix.planarity(pcFix.sel);
 
     med = median(distances);
     sigmad = 1.4826 * mad(distances,1);
-    idxReject = distances < (-med-3*sigmad) | distances > (med+3*sigmad);
+
+    idxReject = ...
+        distances < (-med-3*sigmad) | ...
+        distances > (med+3*sigmad) | ...
+        planarity < minPlanarity;
+
     pcFix.sel(idxReject) = [];
     pcMov.sel(idxReject) = [];
     distances(idxReject) = [];

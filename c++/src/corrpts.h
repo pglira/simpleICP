@@ -11,9 +11,11 @@ class CorrPts {
     // Matching of each selected point of pc1 --> nn of selected points of pc2
     void Match();
 
+    void GetPlanarityFromPc1();
+
     void ComputeDists();
 
-    void Reject();
+    void Reject(const double& min_planarity);
 
     void EstimateRigidBodyTransformation(Matrix<double, 4, 4>& H, VectorXd& residuals);
 
@@ -23,6 +25,7 @@ class CorrPts {
     const std::vector<int>& idx_pc1();
     const std::vector<int>& idx_pc2();
     const VectorXd& dists();
+    const VectorXd& planarity();
 
   private:
     PointCloud pc1_;
@@ -30,6 +33,7 @@ class CorrPts {
     std::vector<int> idx_pc1_;
     std::vector<int> idx_pc2_;
     VectorXd dists_;
+    VectorXd planarity_;
 
 };
 

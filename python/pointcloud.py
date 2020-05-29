@@ -12,6 +12,7 @@ class PointCloud:
         self.nx = None
         self.ny = None
         self.nz = None
+        self.planarity = None
 
         self.no_points = len(x)
         self.sel = None
@@ -28,6 +29,7 @@ class PointCloud:
         self.nx = np.full(self.no_points, np.nan)
         self.ny = np.full(self.no_points, np.nan)
         self.nz = np.full(self.no_points, np.nan)
+        self.planarity = np.full(self.no_points, np.nan)
 
         kdtree = spatial.cKDTree(np.column_stack((self.x, self.y, self.z)))
         query_points = np.column_stack((self.x[self.sel], self.y[self.sel], self.z[self.sel]))
@@ -37,10 +39,13 @@ class PointCloud:
             selected_points = np.column_stack((self.x[idxNN], self.y[idxNN], self.z[idxNN]))
             C = np.cov(selected_points.T, bias=False)
             eig_vals, eig_vecs = np.linalg.eig(C)
-            idx_min = np.argmin(eig_vals)
-            self.nx[self.sel[i]] = eig_vecs[0,idx_min]
-            self.ny[self.sel[i]] = eig_vecs[1,idx_min]
-            self.nz[self.sel[i]] = eig_vecs[2,idx_min]
+            idx_sort = eig_vals.argsort()[::-1] # sort from large to small
+            eig_vals = eig_vals[idx_sort]
+            eig_vecs = eig_vecs[:,idx_sort]
+            self.nx[self.sel[i]] = eig_vecs[0,2]
+            self.ny[self.sel[i]] = eig_vecs[1,2]
+            self.nz[self.sel[i]] = eig_vecs[2,2]
+            self.planarity[self.sel[i]] = (eig_vals[1]-eig_vals[2])/eig_vals[0]
 
     def transform(self, H):
 

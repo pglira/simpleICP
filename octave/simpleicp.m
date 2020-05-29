@@ -21,7 +21,7 @@ function H = simpleicp(XFix, XMov, varargin)
 
     initialDistances = matching(pcFix, pcMov);
 
-    initialDistances = reject(pcFix, pcMov, initialDistances);
+    initialDistances = reject(pcFix, pcMov, p.minPlanarity, initialDistances);
 
     [dH, residualDistances{i}] = estimateRigidBodyTransformation(...
       pcFix.x(pcFix.sel), pcFix.y(pcFix.sel), pcFix.z(pcFix.sel), ...
@@ -71,6 +71,8 @@ function p = parseParameters(XFix, XMov, varargin)
   p.addParamValue("correspondences", 1000, val_correspondences);
   val_neighbors = @(x) isinteger (x) && x>=2;
   p.addParamValue("neighbors", 10, val_neighbors);
+  val_minPlanarity = @(x) isnumeric (x) && x>=0 && x<1;
+  p.addParamValue("minPlanarity", 0.3, val_minPlanarity);
   val_minChange = @(x) isnumeric (x) && x>0;
   p.addParamValue("minChange", 1, val_minChange);
   val_maxIterations = @(x) isinteger (x) && x>0;
@@ -107,11 +109,18 @@ function distances = matching(pcFix, pcMov)
 
 endfunction
 
-function distances = reject(pcFix, pcMov, distances)
+function distances = reject(pcFix, pcMov, minPlanarity, distances)
+
+  planarity = pcFix.planarity(pcFix.sel);
 
   med = median(distances);
   sigmad = 1.4826 * mad(distances,1);
-  idxReject = distances < (-med-3*sigmad) | distances > (med+3*sigmad);
+
+  idxReject = ...
+    distances < (-med-3*sigmad) | ...
+    distances > (med+3*sigmad) | ...
+    planarity < minPlanarity;
+
   pcFix.sel(idxReject) = [];
   pcMov.sel(idxReject) = [];
   distances(idxReject) = [];

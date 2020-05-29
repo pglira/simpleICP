@@ -51,6 +51,7 @@ void PointCloud::EstimateNormals(const int& neighbors) {
   nx_ = VectorXd(NoPts()); nx_.fill(NAN);
   ny_ = VectorXd(NoPts()); ny_.fill(NAN);
   nz_ = VectorXd(NoPts()); nz_.fill(NAN);
+  planarity_ = VectorXd(NoPts()); nz_.fill(NAN);
 
   MatrixXi mat_idx_nn(X_.rows(), neighbors);
   mat_idx_nn = KnnSearch(X_, GetXOfSelectedPts(), neighbors);
@@ -71,13 +72,15 @@ void PointCloud::EstimateNormals(const int& neighbors) {
     MatrixXd C = (centered.adjoint() * centered) / double(X_nn.rows() - 1);
 
     // Normal vector as eigenvector corresponding to smallest eigenvalue
-    EigenSolver<MatrixXd> es(C);
-    auto eigenvectors = es.eigenvectors();
-    int min_index;
-    es.eigenvalues().real().minCoeff(&min_index);
-    nx_[sel_idx[i]] = eigenvectors(0, min_index).real();
-    ny_[sel_idx[i]] = eigenvectors(1, min_index).real();
-    nz_[sel_idx[i]] = eigenvectors(2, min_index).real();
+    // Note that SelfAdjointEigenSolver is faster than EigenSolver for symmetric matrices. Moreover,
+    // the eigenvalues are sorted in increasing order.
+    SelfAdjointEigenSolver<MatrixXd> es(C);
+    auto eigenvectors {es.eigenvectors()};
+    auto eigenvalues {es.eigenvalues()};
+    nx_[sel_idx[i]] = eigenvectors(0, 0);
+    ny_[sel_idx[i]] = eigenvectors(1, 0);
+    nz_[sel_idx[i]] = eigenvectors(2, 0);
+    planarity_[sel_idx[i]] = (eigenvalues[1]-eigenvalues[0])/eigenvalues[2];
   }
 
 }
@@ -99,4 +102,5 @@ const MatrixXd& PointCloud::X() {return X_;}
 const VectorXd& PointCloud::nx() {return nx_;}
 const VectorXd& PointCloud::ny() {return ny_;}
 const VectorXd& PointCloud::nz() {return nz_;}
+const VectorXd& PointCloud::planarity() {return planarity_;}
 const std::vector<bool>& PointCloud::sel() {return sel_;}

@@ -31,11 +31,18 @@ def matching(pcfix, pcmov):
     return distances
 
 
-def reject(pcfix, pcmov, distances):
+def reject(pcfix, pcmov, min_planarity, distances):
+
+    planarity = pcfix.planarity[pcfix.sel]
 
     med = np.median(distances)
     sigmad = stats.median_absolute_deviation(distances)
-    keep = [abs(distance-med) <= 3*sigmad for distance in distances]
+
+    keep_distance = [abs(d-med) <= 3*sigmad for d in distances]
+    keep_planarity = [p > min_planarity for p in planarity]
+
+    keep = keep_distance and keep_planarity
+
     pcfix.sel = pcfix.sel[keep]
     pcmov.sel = pcmov.sel[keep]
     distances = distances[keep]
@@ -97,7 +104,8 @@ def check_convergence_criteria(distances_new, distances_old, min_change):
     return True if change_of_mean < min_change and change_of_std < min_change else False
 
 
-def simpleicp(X_fix, X_mov, correspondences=1000, neighbors=10, min_change=1, max_iterations=100):
+def simpleicp(X_fix, X_mov, correspondences=1000, neighbors=10, min_planarity=0.3, min_change=1,
+              max_iterations=100):
 
     start_time = time.time()
     log("Create point cloud objects ...")
@@ -120,7 +128,7 @@ def simpleicp(X_fix, X_mov, correspondences=1000, neighbors=10, min_change=1, ma
         initial_distances = matching(pcfix, pcmov)
 
         # Todo Change initial_distances without return argument
-        initial_distances = reject(pcfix, pcmov, initial_distances)
+        initial_distances = reject(pcfix, pcmov, min_planarity, initial_distances)
 
         dH, residuals = estimate_rigid_body_transformation(
             pcfix.x[pcfix.sel], pcfix.y[pcfix.sel], pcfix.z[pcfix.sel],
