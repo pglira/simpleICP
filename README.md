@@ -8,13 +8,15 @@ Currently, an implementation is available for:
 
 | Language | Code | Main dependencies |
 | --- | --- | --- |
-| C++ | [Link](c++) | [nanoflann](https://github.com/jlblancoc/nanoflann), [Eigen](http://eigen.tuxfamily.org) |
+| C++ | [Link](c++) | [nanoflann](https://github.com/jlblancoc/nanoflann), [Eigen](http://eigen.tuxfamily.org), [cxxopts](https://github.com/jarro2783/cxxopts) |
 | Julia | [Link](julia) | [NearestNeighbors.jl](https://github.com/KristofferC/NearestNeighbors.jl) |
 | Matlab | [Link](matlab) | [Statistics and Machine Learning Toolbox](https://www.mathworks.com/products/statistics.html) |
 | Octave | [Link](octave) | |
 | Python | [Link](python) | |
 
 I've tried to optimize the readability of the code, i.e. the code structure is as simple as possible and tests are rather rare.
+
+The C++ version can be used through a cli interface.
 
 ## Features of the ICP algorithm
 
@@ -114,6 +116,4 @@ Please cite related papers if you use this code:
 ## Todo
 
 - [ ] Add outline of the algorithm
-- [ ] Use planarity as rejection criteria
 - [ ] Consider partial overlap of point clouds
-- [ ] Generate command line tool for C++ implementation

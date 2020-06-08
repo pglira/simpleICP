@@ -10,7 +10,7 @@ Matrix<double, 4, 4> SimpleICP(const MatrixXd& X_fix,
                                const int& correspondences,
                                const int& neighbors,
                                const double& min_planarity,
-                               const int& min_change,
+                               const double& min_change,
                                const int& max_iterations) {
   auto start = std::chrono::system_clock::now();
 
@@ -110,52 +110,6 @@ Matrix<double, 4, 4> SimpleICP(const MatrixXd& X_fix,
   printf("[%s] Finished in %.3f seconds!\n", Timestamp(), elapsed_seconds.count());
 
   return H_new;
-}
-
-MatrixXd ImportXYZFileToMatrix(const std::string& path_to_pc) {
-  std::ifstream data(path_to_pc);
-  if (data.is_open()) {
-    // Read data from file
-    std::vector<std::vector<std::string>> parsedData;
-    std::string line;
-    while (getline(data, line)) {
-      std::stringstream lineStream(line);
-      std::string cell;  // single value
-      std::vector<std::string> parsedRow;
-      while (getline(lineStream, cell, ' ')) {
-        parsedRow.push_back(cell);
-      }
-      parsedData.push_back(parsedRow);
-    }
-
-    // Check if each line contains exactly 3 values
-    for (int i = 0; i < parsedData.size(); i++) {
-      if (parsedData[i].size() != 3) {
-        std::cerr << "Line " << i + 1 << " does not contain exactly 3 values!" << std::endl;
-        exit(-1);
-      }
-    }
-
-    // Create eigen array
-    MatrixXd X(parsedData.size(), 3);
-    for (int i = 0; i < parsedData.size(); i++) {
-      for (int j = 0; j < parsedData[i].size(); j++) {
-        try {
-          X(i, j) = stod(parsedData[i][j]);
-        } catch (std::exception& e) {
-          std::cerr << "Conversion of " << parsedData[i][j] << " on row/column=" << i << "/" << j
-                    << " is not possible!" << std::endl;
-          exit(-1);
-        }
-      }
-    }
-
-    return X;
-
-  } else {
-    std::cerr << "Error opening file!" << std::endl;
-    exit(-1);
-  }
 }
 
 // https://stackoverflow.com/a/35157784
