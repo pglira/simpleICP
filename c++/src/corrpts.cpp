@@ -10,7 +10,7 @@ void CorrPts::Match() {
   idx_pc1_ = pc1_.GetIdxOfSelectedPts();
   idx_pc2_ = std::vector<int>(idx_pc1_.size());
 
-  MatrixXi mat_idx_nn(idx_pc1_.size(), 1);
+  Eigen::MatrixXi mat_idx_nn(idx_pc1_.size(), 1);
   mat_idx_nn = KnnSearch(X_sel_pc2, X_sel_pc1, 1);
   for (int i = 0; i < mat_idx_nn.rows(); i++) {
     idx_pc2_[i] = mat_idx_nn(i, 0);
@@ -21,14 +21,14 @@ void CorrPts::Match() {
 }
 
 void CorrPts::GetPlanarityFromPc1() {
-  planarity_ = VectorXd(idx_pc1_.size());
+  planarity_ = Eigen::VectorXd(idx_pc1_.size());
   for (int i = 0; i < idx_pc1_.size(); i++) {
     planarity_[i] = pc1_.planarity()[idx_pc1_[i]];
   }
 }
 
 void CorrPts::ComputeDists() {
-  dists_ = VectorXd(idx_pc1_.size());
+  dists_ = Eigen::VectorXd(idx_pc1_.size());
   dists_.fill(NAN);
 
   for (int i = 0; i < idx_pc1_.size(); i++) {
@@ -62,7 +62,7 @@ void CorrPts::Reject(const double& min_planarity) {
   size_t no_remaining_pts = count(keep.begin(), keep.end(), true);
   std::vector<int> idx_pc1_new(no_remaining_pts);
   std::vector<int> idx_pc2_new(no_remaining_pts);
-  VectorXd dists_new(no_remaining_pts);
+  Eigen::VectorXd dists_new(no_remaining_pts);
   int j{0};
   for (int i = 0; i < dists_.size(); i++) {
     if (keep[i]) {
@@ -77,11 +77,12 @@ void CorrPts::Reject(const double& min_planarity) {
   dists_ = dists_new;
 }
 
-void CorrPts::EstimateRigidBodyTransformation(Matrix<double, 4, 4>& H, VectorXd& residuals) {
+void CorrPts::EstimateRigidBodyTransformation(Eigen::Matrix<double, 4, 4>& H,
+                                              Eigen::VectorXd& residuals) {
   auto no_corr_pts{idx_pc1_.size()};
 
-  MatrixXd A(no_corr_pts, 6);
-  VectorXd l(no_corr_pts);
+  Eigen::MatrixXd A(no_corr_pts, 6);
+  Eigen::VectorXd l(no_corr_pts);
 
   for (int i = 0; i < no_corr_pts; i++) {
     double x_pc1 = pc1_.X()(idx_pc1_[i], 0);
@@ -106,7 +107,7 @@ void CorrPts::EstimateRigidBodyTransformation(Matrix<double, 4, 4>& H, VectorXd&
     l(i) = nx_pc1 * (x_pc1 - x_pc2) + ny_pc1 * (y_pc1 - y_pc2) + nz_pc1 * (z_pc1 - z_pc2);
   }
 
-  Matrix<double, 6, 1> x{A.bdcSvd(ComputeThinU | ComputeThinV).solve(l)};
+  Eigen::Matrix<double, 6, 1> x{A.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(l)};
 
   double alpha1{x(0)};
   double alpha2{x(1)};
@@ -143,4 +144,4 @@ const PointCloud& CorrPts::pc1() { return pc1_; }
 const PointCloud& CorrPts::pc2() { return pc2_; }
 const std::vector<int>& CorrPts::idx_pc1() { return idx_pc1_; }
 const std::vector<int>& CorrPts::idx_pc2() { return idx_pc2_; }
-const VectorXd& CorrPts::dists() { return dists_; }
+const Eigen::VectorXd& CorrPts::dists() { return dists_; }

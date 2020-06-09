@@ -1,11 +1,11 @@
 #include "pointcloud.h"
 #include "simpleicp.h"
 
-PointCloud::PointCloud(MatrixXd X) : X_{X}, sel_{std::vector<bool>(X.rows(), true)} {}
+PointCloud::PointCloud(Eigen::MatrixXd X) : X_{X}, sel_{std::vector<bool>(X.rows(), true)} {}
 
-MatrixXd PointCloud::GetXOfSelectedPts() {
+Eigen::MatrixXd PointCloud::GetXOfSelectedPts() {
   auto sel_idx = GetIdxOfSelectedPts();
-  MatrixXd X_sel(sel_idx.size(), 3);
+  Eigen::MatrixXd X_sel(sel_idx.size(), 3);
   for (int i = 0; i < sel_idx.size(); i++) {
     X_sel(i, 0) = X_(sel_idx[i], 0);
     X_sel(i, 1) = X_(sel_idx[i], 1);
@@ -34,7 +34,7 @@ void PointCloud::SelectNPts(const int& n) {
     }
 
     // Re-activate n points
-    auto idx_not_rounded{VectorXd::LinSpaced(n, 0, sel_idx.size() - 1)};
+    auto idx_not_rounded{Eigen::VectorXd::LinSpaced(n, 0, sel_idx.size() - 1)};
     for (int i = 0; i < n; i++) {
       int idx_rounded{static_cast<int>(round(idx_not_rounded(i)))};
       sel_[sel_idx[idx_rounded]] = true;
@@ -44,22 +44,22 @@ void PointCloud::SelectNPts(const int& n) {
 
 void PointCloud::EstimateNormals(const int& neighbors) {
   // Initialize vectors with NANs
-  nx_ = VectorXd(NoPts());
+  nx_ = Eigen::VectorXd(NoPts());
   nx_.fill(NAN);
-  ny_ = VectorXd(NoPts());
+  ny_ = Eigen::VectorXd(NoPts());
   ny_.fill(NAN);
-  nz_ = VectorXd(NoPts());
+  nz_ = Eigen::VectorXd(NoPts());
   nz_.fill(NAN);
-  planarity_ = VectorXd(NoPts());
+  planarity_ = Eigen::VectorXd(NoPts());
   nz_.fill(NAN);
 
-  MatrixXi mat_idx_nn(X_.rows(), neighbors);
+  Eigen::MatrixXi mat_idx_nn(X_.rows(), neighbors);
   mat_idx_nn = KnnSearch(X_, GetXOfSelectedPts(), neighbors);
 
   auto sel_idx = GetIdxOfSelectedPts();
   for (int i = 0; i < sel_idx.size(); i++) {
     // Build matrix with nn
-    MatrixXd X_nn(neighbors, 3);
+    Eigen::MatrixXd X_nn(neighbors, 3);
     for (int j = 0; j < neighbors; j++) {
       X_nn(j, 0) = X_(mat_idx_nn(i, j), 0);
       X_nn(j, 1) = X_(mat_idx_nn(i, j), 1);
@@ -67,13 +67,13 @@ void PointCloud::EstimateNormals(const int& neighbors) {
     }
 
     // Covariance matrix
-    MatrixXd centered = X_nn.rowwise() - X_nn.colwise().mean();
-    MatrixXd C = (centered.adjoint() * centered) / double(X_nn.rows() - 1);
+    Eigen::MatrixXd centered = X_nn.rowwise() - X_nn.colwise().mean();
+    Eigen::MatrixXd C = (centered.adjoint() * centered) / double(X_nn.rows() - 1);
 
     // Normal vector as eigenvector corresponding to smallest eigenvalue
     // Note that SelfAdjointEigenSolver is faster than EigenSolver for symmetric matrices. Moreover,
     // the eigenvalues are sorted in increasing order.
-    SelfAdjointEigenSolver<MatrixXd> es(C);
+    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(C);
     auto eigenvectors{es.eigenvectors()};
     auto eigenvalues{es.eigenvalues()};
     nx_[sel_idx[i]] = eigenvectors(0, 0);
@@ -83,10 +83,10 @@ void PointCloud::EstimateNormals(const int& neighbors) {
   }
 }
 
-void PointCloud::Transform(Matrix<double, 4, 4>& H) {
-  MatrixXd X_in_H(NoPts(), 4);
-  MatrixXd X_out_H(NoPts(), 4);
-  X_in_H << X_, VectorXd::Ones(NoPts());
+void PointCloud::Transform(Eigen::Matrix<double, 4, 4>& H) {
+  Eigen::MatrixXd X_in_H(NoPts(), 4);
+  Eigen::MatrixXd X_out_H(NoPts(), 4);
+  X_in_H << X_, Eigen::VectorXd::Ones(NoPts());
   X_out_H = H * X_in_H.transpose();
   X_ << X_out_H.row(0).transpose(), X_out_H.row(1).transpose(), X_out_H.row(2).transpose();
 }
@@ -94,9 +94,9 @@ void PointCloud::Transform(Matrix<double, 4, 4>& H) {
 int PointCloud::NoPts() { return X_.rows(); }
 
 // Getters
-const MatrixXd& PointCloud::X() { return X_; }
-const VectorXd& PointCloud::nx() { return nx_; }
-const VectorXd& PointCloud::ny() { return ny_; }
-const VectorXd& PointCloud::nz() { return nz_; }
-const VectorXd& PointCloud::planarity() { return planarity_; }
+const Eigen::MatrixXd& PointCloud::X() { return X_; }
+const Eigen::VectorXd& PointCloud::nx() { return nx_; }
+const Eigen::VectorXd& PointCloud::ny() { return ny_; }
+const Eigen::VectorXd& PointCloud::nz() { return nz_; }
+const Eigen::VectorXd& PointCloud::planarity() { return planarity_; }
 const std::vector<bool>& PointCloud::sel() { return sel_; }

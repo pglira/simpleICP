@@ -2,9 +2,7 @@
 #include "cxxopts.hpp"
 #include "simpleicp.h"
 
-using namespace Eigen;
-
-MatrixXd ImportXYZFileToMatrix(const std::string& path_to_pc);
+Eigen::MatrixXd ImportXYZFileToMatrix(const std::string& path_to_pc);
 
 int main(int argc, char** argv) {
   cxxopts::Options options("simpleicp", "A simple version of the ICP algorithm.");
@@ -40,18 +38,18 @@ int main(int argc, char** argv) {
   auto X_fix = ImportXYZFileToMatrix(std::string(result["fixed"].as<std::string>()));
   auto X_mov = ImportXYZFileToMatrix(std::string(result["movable"].as<std::string>()));
 
-  Matrix<double, 4, 4> H = SimpleICP(X_fix,
-                                     X_mov,
-                                     result["correspondences"].as<int>(),
-                                     result["neighbors"].as<int>(),
-                                     result["min_planarity"].as<double>(),
-                                     result["min_change"].as<double>(),
-                                     result["max_iterations"].as<int>());
+  Eigen::Matrix<double, 4, 4> H = SimpleICP(X_fix,
+                                            X_mov,
+                                            result["correspondences"].as<int>(),
+                                            result["neighbors"].as<int>(),
+                                            result["min_planarity"].as<double>(),
+                                            result["min_change"].as<double>(),
+                                            result["max_iterations"].as<int>());
 
   return 0;
 }
 
-MatrixXd ImportXYZFileToMatrix(const std::string& path_to_pc) {
+Eigen::MatrixXd ImportXYZFileToMatrix(const std::string& path_to_pc) {
   std::ifstream data(path_to_pc);
   if (data.is_open()) {
     // Read data from file
@@ -76,7 +74,7 @@ MatrixXd ImportXYZFileToMatrix(const std::string& path_to_pc) {
     }
 
     // Create eigen array
-    MatrixXd X(parsedData.size(), 3);
+    Eigen::MatrixXd X(parsedData.size(), 3);
     for (int i = 0; i < parsedData.size(); i++) {
       for (int j = 0; j < parsedData[i].size(); j++) {
         try {

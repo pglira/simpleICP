@@ -5,13 +5,13 @@
 
 const int LEAF_SIZE{200};
 
-Matrix<double, 4, 4> SimpleICP(const MatrixXd& X_fix,
-                               const MatrixXd& X_mov,
-                               const int& correspondences,
-                               const int& neighbors,
-                               const double& min_planarity,
-                               const double& min_change,
-                               const int& max_iterations) {
+Eigen::Matrix<double, 4, 4> SimpleICP(const Eigen::MatrixXd& X_fix,
+                                      const Eigen::MatrixXd& X_mov,
+                                      const int& correspondences,
+                                      const int& neighbors,
+                                      const double& min_planarity,
+                                      const double& min_change,
+                                      const int& max_iterations) {
   auto start = std::chrono::system_clock::now();
 
   printf("[%s] Create point cloud objects ...\n", Timestamp());
@@ -25,10 +25,10 @@ Matrix<double, 4, 4> SimpleICP(const MatrixXd& X_fix,
   pc_fix.EstimateNormals(neighbors);
 
   // Initialization
-  Matrix<double, 4, 4> H_old{Matrix<double, 4, 4>::Identity()};
-  Matrix<double, 4, 4> H_new;
-  Matrix<double, 4, 4> dH;
-  VectorXd residual_dists;
+  Eigen::Matrix<double, 4, 4> H_old{Eigen::Matrix<double, 4, 4>::Identity()};
+  Eigen::Matrix<double, 4, 4> H_new;
+  Eigen::Matrix<double, 4, 4> dH;
+  Eigen::VectorXd residual_dists;
   std::vector<double> residual_dists_mean;
   std::vector<double> residual_dists_std;
 
@@ -136,13 +136,14 @@ const char* Timestamp() {
   return oss.str().c_str();
 }
 
-MatrixXi KnnSearch(const MatrixXd& X, const MatrixXd& X_query, const int& k) {
+Eigen::MatrixXi KnnSearch(const Eigen::MatrixXd& X, const Eigen::MatrixXd& X_query, const int& k) {
   // Create kd tree
-  typedef nanoflann::KDTreeEigenMatrixAdaptor<Eigen::Matrix<double, Dynamic, Dynamic>> kd_tree;
+  typedef nanoflann::KDTreeEigenMatrixAdaptor<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>>
+      kd_tree;
   kd_tree mat_index(3, std::cref(X), LEAF_SIZE);
 
   // Iterate over all query points
-  MatrixXi mat_idx_nn(X_query.rows(), k);
+  Eigen::MatrixXi mat_idx_nn(X_query.rows(), k);
   for (size_t i = 0; i < X_query.rows(); i++) {
     // Query point
     std::vector<double> qp{X_query(i, 0), X_query(i, 1), X_query(i, 2)};
@@ -162,7 +163,7 @@ MatrixXi KnnSearch(const MatrixXd& X, const MatrixXd& X_query, const int& k) {
   return mat_idx_nn;
 }
 
-double Median(const VectorXd& v) {
+double Median(const Eigen::VectorXd& v) {
   // VectorXd --> vector<double>
   std::vector<double> vv(v.size());
   for (int i = 1; i < v.size(); i++) {
@@ -177,9 +178,9 @@ double Median(const VectorXd& v) {
   return median;
 }
 
-double MAD(const VectorXd& v) {
+double MAD(const Eigen::VectorXd& v) {
   auto med{Median(v)};
-  VectorXd dmed(v.size());
+  Eigen::VectorXd dmed(v.size());
   for (int i = 1; i < v.size(); i++) {
     dmed[i] = abs(v[i] - med);
   }
@@ -187,7 +188,7 @@ double MAD(const VectorXd& v) {
   return mad;
 }
 
-double Std(const VectorXd& v) {
+double Std(const Eigen::VectorXd& v) {
   double std{sqrt((v.array() - v.mean()).square().sum() / (v.size() - 1))};
   return std;
 }

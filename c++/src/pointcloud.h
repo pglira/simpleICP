@@ -4,13 +4,11 @@
 #include <Eigen/Dense>
 #include <vector>
 
-using namespace Eigen;
-
 class PointCloud {
  public:
-  PointCloud(MatrixXd X);
+  PointCloud(Eigen::MatrixXd X);
 
-  MatrixXd GetXOfSelectedPts();
+  Eigen::MatrixXd GetXOfSelectedPts();
 
   std::vector<int> GetIdxOfSelectedPts();
 
@@ -18,24 +16,24 @@ class PointCloud {
 
   void EstimateNormals(const int& neighbors);
 
-  void Transform(Matrix<double, 4, 4>& H);
+  void Transform(Eigen::Matrix<double, 4, 4>& H);
 
   int NoPts();
 
   // Getters
-  const MatrixXd& X();
-  const VectorXd& nx();
-  const VectorXd& ny();
-  const VectorXd& nz();
-  const VectorXd& planarity();
+  const Eigen::MatrixXd& X();
+  const Eigen::VectorXd& nx();
+  const Eigen::VectorXd& ny();
+  const Eigen::VectorXd& nz();
+  const Eigen::VectorXd& planarity();
   const std::vector<bool>& sel();
 
  private:
-  MatrixXd X_;
-  VectorXd nx_;
-  VectorXd ny_;
-  VectorXd nz_;
-  VectorXd planarity_;
+  Eigen::MatrixXd X_;
+  Eigen::VectorXd nx_;
+  Eigen::VectorXd ny_;
+  Eigen::VectorXd nz_;
+  Eigen::VectorXd planarity_;
   std::vector<bool> sel_;
 };
 
