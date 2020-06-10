@@ -13,15 +13,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: configure
-      run: ./configure
-      working-directory: c++
-    - name: make
-      run: make
-      working-directory: c++
-    - name: make check
-      run: make check
-      working-directory: c++
-    - name: make distcheck
-      run: make distcheck
+    - name: build
+      run: ./build.sh
       working-directory: c++
