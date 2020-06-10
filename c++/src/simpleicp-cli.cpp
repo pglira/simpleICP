@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
 
   auto result = options.parse(argc, argv);
 
-  if (result.count("help")) {
+  if (result.count("help") || argc == 1) {
     std::cout << options.help() << std::endl;
     exit(0);
   }
