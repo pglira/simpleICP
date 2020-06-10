@@ -18,6 +18,8 @@ I've tried to optimize the readability of the code, i.e. the code structure is a
 
 The C++ version can be used through a cli interface.
 
+![C/C++ CI](https://github.com/pglira/simpleICP/workflows/C/C++%20CI/badge.svg)
+
 ## Features of the ICP algorithm
 
 - Usage of the signed **point-to-plane distance** (instead of the point-to-point distance) as error metric. Main reasons:
