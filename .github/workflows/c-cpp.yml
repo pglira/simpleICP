@@ -30,4 +30,4 @@ jobs:
         run: sudo apt install libeigen3-dev
       - name: Build
         run: ./build.sh
-        working-directory: $GITHUB_WORKSPACE/simpleICP/c++
+        working-directory: simpleICP/c++
