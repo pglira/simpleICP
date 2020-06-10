@@ -13,6 +13,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: install eigen
+      run: sudo apt install libeigen3-dev
     - name: build
       run: ./build.sh
       working-directory: c++
