@@ -12,9 +12,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: install eigen
-      run: sudo apt install libeigen3-dev
-    - name: build
-      run: ./build.sh
-      working-directory: c++
+      - name: Checkout simpleICP
+        uses: actions/checkout@v2
+        with:
+          path: 'simpleICP'
+      - name: Checkout nanoflann
+        uses: actions/checkout@v2
+        with:
+          repository: 'jlblancoc/nanoflann'
+          path: 'nanoflann'
+      - name: Checkout cxxopts
+        uses: actions/checkout@v2
+        with:
+          repository: 'jarro2783/cxxopts'
+          path: 'cxxopts'
+      - name: Install eigen
+        run: sudo apt install libeigen3-dev
+      - name: Build
+        run: ./build.sh
+        working-directory: c++
