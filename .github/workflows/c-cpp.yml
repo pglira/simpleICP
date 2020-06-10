@@ -26,9 +26,8 @@ jobs:
         with:
           repository: 'jarro2783/cxxopts'
           path: 'cxxopts'
-      - name: Copy dependencies
-        run: copy nanoflann/include/nanoflann.hpp simpleICP/c++/src
-             copy cxxopts/include/cxxopts.hpp simpleICP/c++/src
+      - name: Copy nanoflann header
+        run: cp nanoflann/include/nanoflann.hpp simpleICP/c++/src
       - name: Install eigen
         run: sudo apt install libeigen3-dev
       - name: Build
