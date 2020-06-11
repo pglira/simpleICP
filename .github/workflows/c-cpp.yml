@@ -35,3 +35,8 @@ jobs:
       - name: Build
         run: ./build.sh
         working-directory: simpleICP/c++
+      - name: Save artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: simpleICP
+          path: simpleICP/c++/build/simpleicp
