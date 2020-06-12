@@ -7,7 +7,7 @@ Eigen::MatrixXd ImportXYZFileToMatrix(const std::string& path_to_pc);
 int main(int argc, char** argv) {
   cxxopts::Options options("simpleicp", "A simple version of the ICP algorithm.");
 
-  // @formatter:off
+  // clang-format off
   options.add_options()
     ("f,fixed", "Path to fixed point cloud",
       cxxopts::value<std::string>())
@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
       cxxopts::value<int>()->default_value("100"))
     ("h,help", "Print usage")
     ;
-  // @formatter:on
+  // clang-format on
 
   auto result = options.parse(argc, argv);
 
