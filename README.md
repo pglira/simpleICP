@@ -20,6 +20,10 @@ The C++ version can be used through a cli interface.
 
 ![C/C++ CI](https://github.com/pglira/simpleICP/workflows/C/C++%20CI/badge.svg)
 
+Also available at:
+
+[![View simpleICP on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/81273-simpleicp)
+
 ## Features of the ICP algorithm
 
 - Usage of the signed **point-to-plane distance** (instead of the point-to-point distance) as error metric. Main reasons:
