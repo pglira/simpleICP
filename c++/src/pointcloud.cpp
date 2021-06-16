@@ -51,7 +51,7 @@ void PointCloud::EstimateNormals(const int& neighbors) {
   nz_ = Eigen::VectorXd(NoPts());
   nz_.fill(NAN);
   planarity_ = Eigen::VectorXd(NoPts());
-  nz_.fill(NAN);
+  planarity_.fill(NAN);
 
   Eigen::MatrixXi mat_idx_nn(X_.rows(), neighbors);
   mat_idx_nn = KnnSearch(X_, GetXOfSelectedPts(), neighbors);
