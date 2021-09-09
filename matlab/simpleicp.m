@@ -1,4 +1,4 @@
-function H = simpleicp(XFix, XMov, nva)
+function [H, XmovT] = simpleicp(XFix, XMov, nva)
 
     arguments
         XFix(:,3) {mustBeReal}
@@ -18,7 +18,7 @@ function H = simpleicp(XFix, XMov, nva)
     log('Create point cloud objects ...');
     pcFix = pointcloud(XFix(:,1), XFix(:,2), XFix(:,3));
     pcMov = pointcloud(XMov(:,1), XMov(:,2), XMov(:,3));
-
+    
     if ~isinf(nva.maxOverlapDistance)
         log('Consider partial overlap of point clouds ...');
         pcFix.selectInRange([pcMov.x pcMov.y pcMov.z], nva.maxOverlapDistance);
@@ -73,6 +73,8 @@ function H = simpleicp(XFix, XMov, nva)
 
     end
 
+    XmovT = [pcMov.x pcMov.y pcMov.z];
+    
     log('Estimated transformation matrix H:');
     log(sprintf('[%12.6f %12.6f %12.6f %12.6f]', H(1,1:4)));
     log(sprintf('[%12.6f %12.6f %12.6f %12.6f]', H(2,1:4)));
