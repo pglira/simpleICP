@@ -1,3 +1,7 @@
 c++/build/
 c++/.idea/
-
+.idea/
+c++/cmake-build-*/
+c++/src/cxxopts.hpp
+c++/src/nanoflann.hpp
+python/__pycache__/
