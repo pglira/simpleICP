@@ -9,6 +9,7 @@ function H = simpleicp(XFix, XMov, nva)
             mustBeGreaterThanOrEqual(nva.neighbors, 2)} = 10;
         nva.minPlanarity(1,1) {mustBeGreaterThanOrEqual(nva.minPlanarity, 0), mustBeReal, ...
             mustBeLessThan(nva.minPlanarity, 1)} = 0.3;
+        nva.maxOverlapDistance(1,1) {mustBePositive, mustBeReal} = Inf;
         nva.minChange(1,1) {mustBePositive, mustBeReal} = 3;
         nva.maxIterations(1,1) {mustBePositive, mustBeInteger} = 100;
     end
@@ -18,7 +19,17 @@ function H = simpleicp(XFix, XMov, nva)
     pcFix = pointcloud(XFix(:,1), XFix(:,2), XFix(:,3));
     pcMov = pointcloud(XMov(:,1), XMov(:,2), XMov(:,3));
 
-    log('Select points for correspondences in fixed point cloud ...');
+    if ~isinf(nva.maxOverlapDistance)
+        log('Consider partial overlap of point clouds ...');
+        pcFix.selectInRange([pcMov.x pcMov.y pcMov.z], nva.maxOverlapDistance);
+        if numel(pcFix.sel) == 0
+            error(['Point clouds do not overlap within maxOverlapDistance = %.3f! ' ...
+                   'Consider increasing the value of maxOverlapDistance.'], ...
+                nva.maxOverlapDistance);
+        end
+    end
+
+    log('Select points for correspondences within overlap area of fixed point cloud ...');
     pcFix.selectNPoints(nva.correspondences);
     selOrig = pcFix.sel;
 
