@@ -4,6 +4,7 @@ Implementation of a rather simple version of the Iterative Closest Point (ICP) a
 
 import time
 from datetime import datetime
+from typing import Tuple
 
 import numpy as np
 from scipy import spatial, stats
@@ -11,13 +12,13 @@ from scipy import spatial, stats
 from pointcloud import PointCloud
 
 
-def log(text):
+def log(text: str):
     """Print text with time stamp."""
     logtime = datetime.now().strftime("%H:%M:%S.%f")[:-3]
     print(f"[{logtime}] {text}")
 
 
-def matching(pcfix, pcmov):
+def matching(pcfix: PointCloud, pcmov: PointCloud) -> np.array:
     """Matching of point clouds."""
     kdtree = spatial.cKDTree(np.column_stack((pcmov.x, pcmov.y, pcmov.z)))
     query_points = np.column_stack(
@@ -41,7 +42,9 @@ def matching(pcfix, pcmov):
     return distances
 
 
-def reject(pcfix, pcmov, min_planarity, distances):
+def reject(
+    pcfix: PointCloud, pcmov: PointCloud, min_planarity: float, distances: np.array
+) -> np.array:
     """Rejection of correspondences on the basis of multiple criterias."""
 
     planarity = pcfix.planarity[pcfix.sel]
@@ -62,8 +65,16 @@ def reject(pcfix, pcmov, min_planarity, distances):
 
 
 def estimate_rigid_body_transformation(
-    x_fix, y_fix, z_fix, nx_fix, ny_fix, nz_fix, x_mov, y_mov, z_mov
-):
+    x_fix: np.array,
+    y_fix: np.array,
+    z_fix: np.array,
+    nx_fix: np.array,
+    ny_fix: np.array,
+    nz_fix: np.array,
+    x_mov: np.array,
+    y_mov: np.array,
+    z_mov: np.array,
+) -> Tuple[np.array, np.array]:
     """Estimate rigid body transformation for a given set of correspondences."""
 
     A = np.column_stack(
@@ -92,7 +103,9 @@ def estimate_rigid_body_transformation(
     return H, residuals
 
 
-def euler_angles_to_linearized_rotation_matrix(alpha1, alpha2, alpha3):
+def euler_angles_to_linearized_rotation_matrix(
+    alpha1: float, alpha2: float, alpha3: float
+) -> np.array:
     """Compute linearized rotation matrix from three Euler angles."""
 
     dR = np.array([[1, -alpha3, alpha2], [alpha3, 1, -alpha1], [-alpha2, alpha1, 1]])
@@ -100,7 +113,7 @@ def euler_angles_to_linearized_rotation_matrix(alpha1, alpha2, alpha3):
     return dR
 
 
-def create_homogeneous_transformation_matrix(R, t):
+def create_homogeneous_transformation_matrix(R: np.array, t: np.array) -> np.array:
     """Create homogeneous transformation matrix from rotation matrix R and translation vector t."""
 
     H = np.array(
@@ -115,8 +128,11 @@ def create_homogeneous_transformation_matrix(R, t):
     return H
 
 
-def check_convergence_criteria(distances_new, distances_old, min_change):
+def check_convergence_criteria(
+    distances_new: np.array, distances_old: np.array, min_change: float
+) -> bool:
     """Check if the convergence criteria is met."""
+
     def change(new, old):
         return np.abs((new - old) / old * 100)
 
@@ -127,14 +143,14 @@ def check_convergence_criteria(distances_new, distances_old, min_change):
 
 
 def simpleicp(
-    X_fix,
-    X_mov,
-    correspondences=1000,
-    neighbors=10,
-    min_planarity=0.3,
-    min_change=1,
-    max_iterations=100,
-):
+    X_fix: PointCloud,
+    X_mov: PointCloud,
+    correspondences: int = 1000,
+    neighbors: int = 10,
+    min_planarity: float = 0.3,
+    min_change: float = 1.0,
+    max_iterations: int = 100,
+) -> np.array:
     """Implementation of a rather simple version of the Iterative Closest Point (ICP) algorithm."""
 
     start_time = time.time()
