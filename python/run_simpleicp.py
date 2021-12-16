@@ -24,7 +24,4 @@ path_to_pc2 = "../data/dragon2.xyz"
 X_fix = np.array(read_xyz(path_to_pc1))
 X_mov = np.array(read_xyz(path_to_pc2))
 
-print(path_to_pc1)
-print(path_to_pc2)
-
-simpleicp.simpleicp(X_fix, X_mov)
+H = simpleicp.simpleicp(X_fix, X_mov)
