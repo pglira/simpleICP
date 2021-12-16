@@ -12,7 +12,7 @@ import simpleicp
 def read_xyz(path_to_pc):
     """Generate numpy array from xyz file."""
     X = []
-    with open(path_to_pc) as f:
+    with open(path_to_pc, encoding="utf8") as f:
         reader = csv.reader(f, delimiter=" ")
         for row in reader:
             X.append(list(map(float, row)))
