@@ -7,7 +7,7 @@ import time
 
 def log(text):
     logtime = datetime.now().strftime("%H:%M:%S.%f")[:-3]
-    print("[{}] {}".format(logtime, text))
+    print(f"[{logtime}] {text}")
 
 
 def matching(pcfix, pcmov):
@@ -174,48 +174,29 @@ def simpleicp(
 
         if i == 0:
             log(
-                "{:9s} | {:15s} | {:15s} | {:15s}".format(
-                    "Iteration", "correspondences", "mean(residuals)", "std(residuals)"
-                )
+                f"{'Iteration':9s} | "
+                f"{'correspondences':15s} | "
+                f"{'mean(residuals)':15s} | "
+                f"{'std(residuals)':15s}"
             )
             log(
-                "{:9d} | {:15d} | {:15.4f} | {:15.4f}".format(
-                    0,
-                    len(initial_distances),
-                    np.mean(initial_distances),
-                    np.std(initial_distances),
-                )
+                f"{0:9d} | "
+                f"{len(initial_distances):15d} | "
+                f"{np.mean(initial_distances):15.4f} | "
+                f"{np.std(initial_distances):15.4f}"
             )
         log(
-            "{:9d} | {:15d} | {:15.4f} | {:15.4f}".format(
-                i + 1,
-                len(residual_distances[i]),
-                np.mean(residual_distances[i]),
-                np.std(residual_distances[i]),
-            )
+            f"{i+1:9d} | "
+            f"{len(residual_distances[i]):15d} | "
+            f"{np.mean(residual_distances[i]):15.4f} | "
+            f"{np.std(residual_distances[i]):15.4f}"
         )
 
     log("Estimated transformation matrix H:")
-    log(
-        "H = [{:12.6f} {:12.6f} {:12.6f} {:12.6f}]".format(
-            H[0, 0], H[0, 1], H[0, 2], H[0, 3]
-        )
-    )
-    log(
-        "    [{:12.6f} {:12.6f} {:12.6f} {:12.6f}]".format(
-            H[1, 0], H[1, 1], H[1, 2], H[1, 3]
-        )
-    )
-    log(
-        "    [{:12.6f} {:12.6f} {:12.6f} {:12.6f}]".format(
-            H[2, 0], H[2, 1], H[2, 2], H[2, 3]
-        )
-    )
-    log(
-        "    [{:12.6f} {:12.6f} {:12.6f} {:12.6f}]".format(
-            H[3, 0], H[3, 1], H[3, 2], H[3, 3]
-        )
-    )
-    log("Finished in {:.3f} seconds!".format(time.time() - start_time))
+    log(f"H = [{H[0, 0]:12.6f} {H[0, 1]:12.6f} {H[0, 2]:12.6f} {H[0, 3]:12.6f}]")
+    log(f"H = [{H[1, 0]:12.6f} {H[1, 1]:12.6f} {H[1, 2]:12.6f} {H[1, 3]:12.6f}]")
+    log(f"H = [{H[2, 0]:12.6f} {H[2, 1]:12.6f} {H[2, 2]:12.6f} {H[2, 3]:12.6f}]")
+    log(f"H = [{H[3, 0]:12.6f} {H[3, 1]:12.6f} {H[3, 2]:12.6f} {H[3, 3]:12.6f}]")
+    log(f"Finished in {time.time() - start_time:.3f} seconds!")
 
     return H
