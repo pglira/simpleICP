@@ -1,9 +1,16 @@
+"""
+Read two point clouds from xyz files and run simpleICP.
+"""
+
 import csv
+
 import numpy as np
+
 import simpleicp
 
 
 def read_xyz(path_to_pc):
+    """Generate numpy array from xyz file."""
     X = []
     with open(path_to_pc) as f:
         reader = csv.reader(f, delimiter=" ")

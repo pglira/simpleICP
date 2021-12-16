@@ -1,8 +1,14 @@
+"""
+PointCloud class.
+"""
+
 import numpy as np
 from scipy import spatial
 
 
 class PointCloud:
+    """Class for working with point cloud data."""
+
     def __init__(self, x, y, z):
         self.x = x
         self.y = y
@@ -17,6 +23,7 @@ class PointCloud:
         self.sel = None
 
     def select_n_points(self, n):
+        """Select n points equidistantly."""
 
         if self.no_points > n:
             self.sel = np.round(np.linspace(0, self.no_points - 1, n)).astype(int)
@@ -24,6 +31,7 @@ class PointCloud:
             self.sel = np.arange(0, self.no_points, 1)
 
     def estimate_normals(self, neighbors):
+        """Estimate normal vectors for selected points from its neighborhood."""
 
         self.nx = np.full(self.no_points, np.nan)
         self.ny = np.full(self.no_points, np.nan)
@@ -51,6 +59,7 @@ class PointCloud:
             self.planarity[self.sel[i]] = (eig_vals[1] - eig_vals[2]) / eig_vals[0]
 
     def transform(self, H):
+        """Transform point cloud by given homogeneous transformation matrix H."""
 
         XInE = np.column_stack((self.x, self.y, self.z))
         XInH = PointCloud.euler_coord_to_homogeneous_coord(XInE)
@@ -63,6 +72,7 @@ class PointCloud:
 
     @staticmethod
     def euler_coord_to_homogeneous_coord(XE):
+        """Convert Euler coordinates to homogeneous coordinates."""
 
         no_points = np.shape(XE)[0]
         XH = np.column_stack((XE, np.ones(no_points)))
@@ -71,6 +81,7 @@ class PointCloud:
 
     @staticmethod
     def homogeneous_coord_to_euler_coord(XH):
+        """Convert homogeneous coordinates to Euler coordinates."""
 
         XE = np.column_stack(
             (XH[:, 0] / XH[:, 3], XH[:, 1] / XH[:, 3], XH[:, 2] / XH[:, 3])

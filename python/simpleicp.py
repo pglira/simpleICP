@@ -1,3 +1,6 @@
+"""
+Implementation of a rather simple version of the Iterative Closest Point (ICP) algorithm.
+"""
 from datetime import datetime
 from pointcloud import PointCloud
 from scipy import spatial, stats
@@ -6,11 +9,13 @@ import time
 
 
 def log(text):
+    """Print text with time stamp."""
     logtime = datetime.now().strftime("%H:%M:%S.%f")[:-3]
     print(f"[{logtime}] {text}")
 
 
 def matching(pcfix, pcmov):
+    """Matching of point clouds."""
     kdtree = spatial.cKDTree(np.column_stack((pcmov.x, pcmov.y, pcmov.z)))
     query_points = np.column_stack(
         (pcfix.x[pcfix.sel], pcfix.y[pcfix.sel], pcfix.z[pcfix.sel])
@@ -34,6 +39,7 @@ def matching(pcfix, pcmov):
 
 
 def reject(pcfix, pcmov, min_planarity, distances):
+    """Rejection of correspondences on the basis of multiple criterias."""
 
     planarity = pcfix.planarity[pcfix.sel]
 
@@ -55,6 +61,7 @@ def reject(pcfix, pcmov, min_planarity, distances):
 def estimate_rigid_body_transformation(
     x_fix, y_fix, z_fix, nx_fix, ny_fix, nz_fix, x_mov, y_mov, z_mov
 ):
+    """Estimate rigid body transformation for a given set of correspondences."""
 
     A = np.column_stack(
         (
@@ -83,6 +90,7 @@ def estimate_rigid_body_transformation(
 
 
 def euler_angles_to_linearized_rotation_matrix(alpha1, alpha2, alpha3):
+    """Compute linearized rotation matrix from three Euler angles."""
 
     dR = np.array([[1, -alpha3, alpha2], [alpha3, 1, -alpha1], [-alpha2, alpha1, 1]])
 
@@ -90,6 +98,7 @@ def euler_angles_to_linearized_rotation_matrix(alpha1, alpha2, alpha3):
 
 
 def create_homogeneous_transformation_matrix(R, t):
+    """Create homogeneous transformation matrix from rotation matrix R and translation vector t."""
 
     H = np.array(
         [
@@ -104,6 +113,7 @@ def create_homogeneous_transformation_matrix(R, t):
 
 
 def check_convergence_criteria(distances_new, distances_old, min_change):
+    """Check if the convergence criteria is met."""
     def change(new, old):
         return np.abs((new - old) / old * 100)
 
@@ -122,6 +132,7 @@ def simpleicp(
     min_change=1,
     max_iterations=100,
 ):
+    """Implementation of a rather simple version of the Iterative Closest Point (ICP) algorithm."""
 
     start_time = time.time()
     log("Create point cloud objects ...")
