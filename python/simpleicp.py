@@ -157,7 +157,6 @@ def simpleicp(
 
         initial_distances = matching(pcfix, pcmov)
 
-        # Todo Change initial_distances without return argument
         initial_distances = reject(pcfix, pcmov, min_planarity, initial_distances)
 
         dH, residuals = estimate_rigid_body_transformation(
