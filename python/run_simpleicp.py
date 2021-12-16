@@ -6,14 +6,14 @@ import simpleicp
 def read_xyz(path_to_pc):
     X = []
     with open(path_to_pc) as f:
-        reader = csv.reader(f, delimiter=' ')
+        reader = csv.reader(f, delimiter=" ")
         for row in reader:
             X.append(list(map(float, row)))
     return X
 
 
-path_to_pc1 = '../data/dragon1.xyz'
-path_to_pc2 = '../data/dragon2.xyz'
+path_to_pc1 = "../data/dragon1.xyz"
+path_to_pc2 = "../data/dragon2.xyz"
 
 # path_to_pc1 = '../data/airborne_lidar1.xyz'
 # path_to_pc2 = '../data/airborne_lidar2.xyz'
