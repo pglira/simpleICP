@@ -1,11 +1,14 @@
 """
 Implementation of a rather simple version of the Iterative Closest Point (ICP) algorithm.
 """
-from datetime import datetime
-from pointcloud import PointCloud
-from scipy import spatial, stats
-import numpy as np
+
 import time
+from datetime import datetime
+
+import numpy as np
+from scipy import spatial, stats
+
+from pointcloud import PointCloud
 
 
 def log(text):
