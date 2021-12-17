@@ -20,15 +20,29 @@ class PointCloud:
         self.planarity = None
 
         self.no_points = len(x)
-        self.sel = None
+        self.sel = np.arange(0, len(x), 1)
+
+    def select_in_range(self, X: np.array, max_range: float):
+        """Select points within range of points X."""
+
+        assert np.shape(X)[1] == 3, "X must have 3 columns!"
+
+        kdtree = spatial.cKDTree(X)
+
+        distances, _ = kdtree.query(
+            self.X_sel, k=1, p=2, distance_upper_bound=max_range, workers=-1
+        )
+
+        keep = np.isfinite(distances)  # distances > max_range are infinite
+
+        self.sel = self.sel[keep]
 
     def select_n_points(self, n: int):
         """Select n points equidistantly."""
 
-        if self.no_points > n:
-            self.sel = np.round(np.linspace(0, self.no_points - 1, n)).astype(int)
-        else:
-            self.sel = np.arange(0, self.no_points, 1)
+        if self.no_selected_points > n:
+            idx = np.round(np.linspace(0, self.no_selected_points - 1, n)).astype(int)
+            self.sel = self.sel[idx]
 
     def estimate_normals(self, neighbors: int):
         """Estimate normal vectors for selected points from its neighborhood."""
@@ -38,11 +52,8 @@ class PointCloud:
         self.nz = np.full(self.no_points, np.nan)
         self.planarity = np.full(self.no_points, np.nan)
 
-        kdtree = spatial.cKDTree(np.column_stack((self.x, self.y, self.z)))
-        query_points = np.column_stack(
-            (self.x[self.sel], self.y[self.sel], self.z[self.sel])
-        )
-        _, idxNN_all_qp = kdtree.query(query_points, k=neighbors, p=2, n_jobs=-1)
+        kdtree = spatial.cKDTree(self.X)
+        _, idxNN_all_qp = kdtree.query(self.X_sel, k=neighbors, p=2, workers=-1)
 
         for (i, idxNN) in enumerate(idxNN_all_qp):
             selected_points = np.column_stack(
@@ -61,14 +72,43 @@ class PointCloud:
     def transform(self, H: np.array):
         """Transform point cloud by given homogeneous transformation matrix H."""
 
-        XInE = np.column_stack((self.x, self.y, self.z))
-        XInH = PointCloud.euler_coord_to_homogeneous_coord(XInE)
+        XInH = PointCloud.euler_coord_to_homogeneous_coord(self.X)
         XOutH = np.transpose(H @ XInH.T)
         XOut = PointCloud.homogeneous_coord_to_euler_coord(XOutH)
 
         self.x = XOut[:, 0]
         self.y = XOut[:, 1]
         self.z = XOut[:, 2]
+
+    @property
+    def x_sel(self) -> np.array:
+        """Returns x coordinates of selected points."""
+        return self.x[self.sel]
+
+    @property
+    def y_sel(self) -> np.array:
+        """Returns y coordinates of selected points."""
+        return self.y[self.sel]
+
+    @property
+    def z_sel(self) -> np.array:
+        """Returns z coordinates of selected points."""
+        return self.z[self.sel]
+
+    @property
+    def X(self) -> np.array:
+        """Returns n-by-3 matrix of all points."""
+        return np.column_stack((self.x, self.y, self.z))
+
+    @property
+    def X_sel(self) -> np.array:
+        """Returns n-by-3 matrix of selected points."""
+        return np.column_stack((self.x[self.sel], self.y[self.sel], self.z[self.sel]))
+
+    @property
+    def no_selected_points(self) -> int:
+        """Returns number of selected points."""
+        return len(self.sel)
 
     @staticmethod
     def euler_coord_to_homogeneous_coord(XE: np.array):

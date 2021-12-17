@@ -20,21 +20,18 @@ def log(text: str):
 
 def matching(pcfix: PointCloud, pcmov: PointCloud) -> np.array:
     """Matching of point clouds."""
-    kdtree = spatial.cKDTree(np.column_stack((pcmov.x, pcmov.y, pcmov.z)))
-    query_points = np.column_stack(
-        (pcfix.x[pcfix.sel], pcfix.y[pcfix.sel], pcfix.z[pcfix.sel])
-    )
-    _, pcmov.sel = kdtree.query(query_points, k=1, p=2, n_jobs=-1)
+    kdtree = spatial.cKDTree(pcmov.X)
+    _, pcmov.sel = kdtree.query(pcfix.X_sel, k=1, p=2, n_jobs=-1)
 
-    dx = pcmov.x[pcmov.sel] - pcfix.x[pcfix.sel]
-    dy = pcmov.y[pcmov.sel] - pcfix.y[pcfix.sel]
-    dz = pcmov.z[pcmov.sel] - pcfix.z[pcfix.sel]
+    dx = pcmov.x_sel - pcfix.x_sel
+    dy = pcmov.y_sel - pcfix.y_sel
+    dz = pcmov.z_sel - pcfix.z_sel
 
     nx = pcfix.nx[pcfix.sel]
     ny = pcfix.ny[pcfix.sel]
     nz = pcfix.nz[pcfix.sel]
 
-    no_correspondences = len(pcfix.sel)
+    no_correspondences = pcfix.no_selected_points
     distances = np.empty(no_correspondences)
     for i in range(0, no_correspondences):
         distances[i] = dx[i] * nx[i] + dy[i] * ny[i] + dz[i] * nz[i]
@@ -148,9 +145,10 @@ def simpleicp(
     correspondences: int = 1000,
     neighbors: int = 10,
     min_planarity: float = 0.3,
+    max_overlap_distance: float = np.inf,
     min_change: float = 1.0,
     max_iterations: int = 100,
-) -> np.array:
+) -> Tuple[np.array, np.array]:
     """Implementation of a rather simple version of the Iterative Closest Point (ICP) algorithm."""
 
     start_time = time.time()
@@ -158,7 +156,17 @@ def simpleicp(
     pcfix = PointCloud(X_fix[:, 0], X_fix[:, 1], X_fix[:, 2])
     pcmov = PointCloud(X_mov[:, 0], X_mov[:, 1], X_mov[:, 2])
 
-    log("Select points for correspondences in fixed point cloud ...")
+    if np.isfinite(max_overlap_distance):
+        log("Consider partial overlap of point clouds ...")
+        pcfix.select_in_range(pcmov.X, max_range=max_overlap_distance)
+        assert pcfix.no_selected_points > 0, (
+            "Point clouds do not overlap within max_overlap_distance = ",
+            f"{max_overlap_distance:.3f}! Consider increasing the value of max_overlap_distance.",
+        )
+
+    log(
+        "Select points for correspondences within overlap area of fixed point cloud ..."
+    )
     pcfix.select_n_points(correspondences)
     sel_orig = pcfix.sel
 
@@ -176,15 +184,15 @@ def simpleicp(
         initial_distances = reject(pcfix, pcmov, min_planarity, initial_distances)
 
         dH, residuals = estimate_rigid_body_transformation(
-            pcfix.x[pcfix.sel],
-            pcfix.y[pcfix.sel],
-            pcfix.z[pcfix.sel],
+            pcfix.x_sel,
+            pcfix.y_sel,
+            pcfix.z_sel,
             pcfix.nx[pcfix.sel],
             pcfix.ny[pcfix.sel],
             pcfix.nz[pcfix.sel],
-            pcmov.x[pcmov.sel],
-            pcmov.y[pcmov.sel],
-            pcmov.z[pcmov.sel],
+            pcmov.x_sel,
+            pcmov.y_sel,
+            pcmov.z_sel,
         )
 
         residual_distances.append(residuals)
@@ -228,4 +236,4 @@ def simpleicp(
     log(f"H = [{H[3, 0]:12.6f} {H[3, 1]:12.6f} {H[3, 2]:12.6f} {H[3, 3]:12.6f}]")
     log(f"Finished in {time.time() - start_time:.3f} seconds!")
 
-    return H
+    return H, pcmov.X
