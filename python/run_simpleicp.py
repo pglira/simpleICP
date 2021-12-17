@@ -10,6 +10,7 @@ import simpleicp
 
 dataset = "Bunny"
 export_results = True
+plot_results = True
 
 if dataset == "Dragon":
     X_fix = np.genfromtxt(Path("../data/dragon1.xyz"))
@@ -44,3 +45,24 @@ if export_results:
     np.savetxt(target_dir.joinpath(Path("X_fix.xyz")), X_fix)
     np.savetxt(target_dir.joinpath(Path("X_mov.xyz")), X_mov)
     np.savetxt(target_dir.joinpath(Path("X_mov_transformed.xyz")), X_mov_transformed)
+
+# Plot original and adjusted point clouds with open3d viewer
+if plot_results:
+    import open3d as o3d
+
+    pcd_fix = o3d.geometry.PointCloud()
+    pcd_fix.points = o3d.utility.Vector3dVector(X_fix)
+    colors = [[1, 0, 0] for i in range(len(pcd_fix.points))]  # red
+    pcd_fix.colors = o3d.utility.Vector3dVector(colors)
+
+    pcd_mov = o3d.geometry.PointCloud()
+    pcd_mov.points = o3d.utility.Vector3dVector(X_mov)
+    colors = [[0, 1, 0] for i in range(len(pcd_mov.points))]  # green
+    pcd_mov.colors = o3d.utility.Vector3dVector(colors)
+
+    pcd_mov_transformed = o3d.geometry.PointCloud()
+    pcd_mov_transformed.points = o3d.utility.Vector3dVector(X_mov_transformed)
+    colors = [[0, 0, 1] for i in range(len(pcd_mov_transformed.points))]  # blue
+    pcd_mov_transformed.colors = o3d.utility.Vector3dVector(colors)
+
+    o3d.visualization.draw_geometries([pcd_fix, pcd_mov, pcd_mov_transformed])
