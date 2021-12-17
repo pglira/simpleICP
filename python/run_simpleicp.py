@@ -2,34 +2,45 @@
 Read two point clouds from xyz files and run simpleICP.
 """
 
-import csv
 from pathlib import Path
 
 import numpy as np
 
 import simpleicp
 
+dataset = "Bunny"
+export_results = True
 
-def read_xyz(path_to_pc: Path) -> np.array:
-    """Generate numpy array from xyz file."""
-    X = []
-    with open(path_to_pc, encoding="utf8") as f:
-        reader = csv.reader(f, delimiter=" ")
-        for row in reader:
-            X.append(list(map(float, row)))
-    return X
+if dataset == "Dragon":
+    X_fix = np.genfromtxt(Path("../data/dragon1.xyz"))
+    X_mov = np.genfromtxt(Path("../data/dragon2.xyz"))
+    H, X_mov_transformed = simpleicp.simpleicp(X_fix, X_mov)
 
+elif dataset == "Airborne Lidar":
+    X_fix = np.genfromtxt(Path("../data/airborne_lidar1.xyz"))
+    X_mov = np.genfromtxt(Path("../data/airborne_lidar2.xyz"))
+    H, X_mov_transformed = simpleicp.simpleicp(X_fix, X_mov)
 
-path_to_pc1 = Path("../data/dragon1.xyz")
-path_to_pc2 = Path("../data/dragon2.xyz")
+elif dataset == "Terrestrial Lidar":
+    X_fix = np.genfromtxt(Path("../data/terrestrial_lidar1.xyz"))
+    X_mov = np.genfromtxt(Path("../data/terrestrial_lidar2.xyz"))
+    H, X_mov_transformed = simpleicp.simpleicp(X_fix, X_mov)
 
-# path_to_pc1 = Path('../data/airborne_lidar1.xyz')
-# path_to_pc2 = Path('../data/airborne_lidar2.xyz')
+elif dataset == "Bunny":
+    X_fix = np.genfromtxt(Path("../data/bunny_part1.xyz"))
+    X_mov = np.genfromtxt(Path("../data/bunny_part2.xyz"))
+    H, X_mov_transformed = simpleicp.simpleicp(X_fix, X_mov, max_overlap_distance=0.01)
 
-# path_to_pc1 = Path('../data/terrestrial_lidar1.xyz')
-# path_to_pc2 = Path('../data/terrestrial_lidar2.xyz')
+elif dataset == "Multisensor":
+    X_fix = np.genfromtxt(Path("../data/multisensor_lidar.xyz"))
+    X_mov = np.genfromtxt(Path("../data/multisensor_radar.xyz"))
+    H, X_mov_transformed = simpleicp.simpleicp(X_fix, X_mov, max_overlap_distance=2.0)
 
-X_fix = np.array(read_xyz(path_to_pc1))
-X_mov = np.array(read_xyz(path_to_pc2))
+# Export original and adjusted point clouds to xyz files to check the result
+if export_results:
+    target_dir = Path("check")
+    target_dir.mkdir(parents=True, exist_ok=True)
 
-H = simpleicp.simpleicp(X_fix, X_mov)
+    np.savetxt(target_dir.joinpath(Path("X_fix.xyz")), X_fix)
+    np.savetxt(target_dir.joinpath(Path("X_mov.xyz")), X_mov)
+    np.savetxt(target_dir.joinpath(Path("X_mov_transformed.xyz")), X_mov_transformed)
