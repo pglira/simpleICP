@@ -31,10 +31,10 @@ classdef pointcloud < handle
         
         function selectInRange(obj, X, range)
             
-            [idx, distance] = knnsearch([obj.x(obj.sel) obj.y(obj.sel) obj.z(obj.sel)], X, ...
+            [~, distance] = knnsearch(X, [obj.x(obj.sel) obj.y(obj.sel) obj.z(obj.sel)], ...
                 'BucketSize', 1000);
-            idxInRange = unique(idx(distance <= range));
-            obj.sel = obj.sel(idxInRange);
+            keep = distance <= range;
+            obj.sel = obj.sel(keep);
             
         end
 
