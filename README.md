@@ -91,9 +91,9 @@ These are the runtimes on my PC for the data sets above:
 
 | Dataset | C++ | Julia | Matlab | Octave* | Python |
 | :--- | ---: | ---: | ---: | ---: | ---: |
-| *Dragon*            | 0.13s | 0.40s |  0.72s | 83.7s |  0.45s |
-| *Airborne Lidar*    | 4.08s | 5.04s | 19.80s | -     | 73.39s |
-| *Terrestrial Lidar* | 3.25s | 4.49s | 20.01s | -     |  6.20s |
+| *Dragon*            | 0.13s | 0.40s |  0.78s | 83.7s | 0.89s |
+| *Airborne Lidar*    | 4.08s | 5.04s | 15.08s | -     | 5.45s |
+| *Terrestrial Lidar* | 3.25s | 4.49s | 13.24s | -     | 5.68s |
 
 For all input parameters (``correspondences``, ``neighbors``, ...) the default values have been used.
 
