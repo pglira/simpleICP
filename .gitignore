@@ -5,3 +5,4 @@ c++/cmake-build-*/
 c++/src/cxxopts.hpp
 c++/src/nanoflann.hpp
 python/__pycache__/
+python/check/
