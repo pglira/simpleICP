@@ -50,7 +50,7 @@ Also available at:
 
 ## Output
 
-All implementations generate the same output. This is an example from the C++ version for the *Dragon* dataset:
+All implementations generate the same screen output. This is an example from the C++ version for the *Dragon* dataset:
 
 ```
 > run_simpleicp
@@ -79,11 +79,12 @@ All implementations generate the same output. This is an example from the C++ ve
 
 The test data sets are included in the [data](data) subfolder. An example call for each language can be found in the ``run_simpleicp.*`` files, e.g. [run_simpleicp.py](python/run_simpleicp.py) for the python version.
 
-| Dataset | | PC1 (no_pts) | PC2 (no_pts) | Source |
-| :--- | --- | --- | --- | --- |
-| *Dragon* | ![Dragon](/data/dragon_small.png) | [``dragon1.xyz``](data/dragon1.xyz) (100k) | [``dragon2.xyz``](data/dragon2.xyz) (100k) | [The Stanford 3D Scanning Repository](http://graphics.stanford.edu/data/3Dscanrep/) |
-| *Airborne Lidar* | ![AirborneLidar](/data/airborne_lidar_small.png) | [``airborne_lidar1.xyz``](data/airborne_lidar1.xyz) (1340k) | [``airborne_lidar2.xyz``](data/airborne_lidar2.xyz) (1340k) | Airborne Lidar fligth campaign over Austrian Alps |
-| *Terrestrial Lidar* | ![TerrestrialLidar](/data/terrestrial_lidar_small.png) | [``terrestrial_lidar1.xyz``](data/terrestrial_lidar1.xyz) (1250k) | [``terrestrial_lidar2.xyz``](data/terrestrial_lidar2.xyz) (1250k) | Terrestrial Lidar point clouds of a stone block|
+| Dataset | | PC1 (no_pts) | PC2 (no_pts) | Overlap | Source |
+| :--- | --- | --- | --- | --- | --- |
+| *Dragon* | ![Dragon](/data/dragon_small.png) | [``dragon1.xyz``](data/dragon1.xyz) (100k) | [``dragon2.xyz``](data/dragon2.xyz) (100k) | full overlap | [The Stanford 3D Scanning Repository](http://graphics.stanford.edu/data/3Dscanrep/) |
+| *Airborne Lidar* | ![AirborneLidar](/data/airborne_lidar_small.png) | [``airborne_lidar1.xyz``](data/airborne_lidar1.xyz) (1340k) | [``airborne_lidar2.xyz``](data/airborne_lidar2.xyz) (1340k) | full overlap | Airborne Lidar fligth campaign over Austrian Alps |
+| *Terrestrial Lidar* | ![TerrestrialLidar](/data/terrestrial_lidar_small.png) | [``terrestrial_lidar1.xyz``](data/terrestrial_lidar1.xyz) (1250k) | [``terrestrial_lidar2.xyz``](data/terrestrial_lidar2.xyz) (1250k) | full overlap | Terrestrial Lidar point clouds of a stone block|
+| *Bunny* | ![Bunny](/data/bunny_small.png) | [``bunny_part1.xyz``](data/bunny_part1.xyz) (21k) | [``bunny_part2.xyz``](data/bunny_part2.xyz) (22k) | partial overlap | [The Stanford 3D Scanning Repository](http://graphics.stanford.edu/data/3Dscanrep/) |
 
 ### Benchmark
 
@@ -94,10 +95,13 @@ These are the runtimes on my PC for the data sets above:
 | *Dragon*            | 0.13s | 0.40s |  0.78s | 83.7s | 0.89s |
 | *Airborne Lidar*    | 4.08s | 5.04s | 15.08s | -     | 5.45s |
 | *Terrestrial Lidar* | 3.25s | 4.49s | 13.24s | -     | 5.68s |
+| *Bunny*             | ** | ** |  0.37s | ** | 0.80s |
 
-For all input parameters (``correspondences``, ``neighbors``, ...) the default values have been used.
+For all version the same input parameters (``correspondences``, ``neighbors``, ...) have been used.
 
 **\*** Unfortunately, I haven't found an implementation of a kd tree in Octave (it is not yet implemented in the [Statistics](https://wiki.octave.org/Statistics_package) package). Thus, a (very time-consuming!) exhaustive nearest neighbor search is used instead. For larger datasets the Octave timings are missing, as the distance matrix does not fit into memory.
+
+** Not possible yet, as partial overlap of the point clouds can currently only be handled by the Matlab and Python implementation (see also todo below).
 
 ## References
 
@@ -121,5 +125,10 @@ Please cite related papers if you use this code:
 
 ## Todo
 
-- [ ] Add outline of the algorithm
 - [ ] Consider partial overlap of point clouds
+  - [ ] C++
+  - [ ] Julia
+  - [X] Matlab
+  - [ ] Octave
+  - [X] Python
+- [ ] Add outline of the algorithm
