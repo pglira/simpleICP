@@ -49,10 +49,10 @@ def reject(
     med = np.median(distances)
     sigmad = stats.median_absolute_deviation(distances)
 
-    keep_distance = [abs(d - med) <= 3 * sigmad for d in distances]
-    keep_planarity = [p > min_planarity for p in planarity]
+    keep_distance = np.array([abs(d - med) <= 3 * sigmad for d in distances])
+    keep_planarity = np.array([p >= min_planarity for p in planarity])
 
-    keep = keep_distance and keep_planarity
+    keep = keep_distance & keep_planarity
 
     pcfix.sel = pcfix.sel[keep]
     pcmov.sel = pcmov.sel[keep]
