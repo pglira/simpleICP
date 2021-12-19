@@ -48,6 +48,19 @@ Also available at:
 - After each iteration a **convergence criteria** is tested: if the mean and the standard deviation of the point-to-plane distances do not change more than ``min_change`` percent, the iteration is stopped. Default is ``min_change = 1``.
 - The normal vector of the plane (needed to compute the point-to-plane distance) is estimated from the fixed point cloud using a fixed number of neighbors. Default is ``neighbors = 10``.
 
+### Extended features
+
+There are some extended features which are currently not implemented in all languages. The differences are documented in the following table:
+
+| Feature | C++ | Julia | Matlab | Octave | Python |
+| --- | --- | --- | --- | --- | --- |
+| **partial overlap** | no | no | yes | no | yes |
+
+Description of extended features:
+
+- **partial overlap**: point clouds must not fully overlap, i.e. a partial overlap of the point cloud is allowed. An example for such a case is the
+*Bunny* dataset, see [here](#test-data-sets). The initial overlapping area between two point clouds can be defined by the parameter ``max_overlap_distance``. More specifically, the correspondences are only selected across points of the fixed point cloud for which the initial distance to the nearest neighbor of the movable point cloud is ``<= max_overlap_distance``.
+
 ## Output
 
 All implementations generate the same screen output. This is an example from the C++ version for the *Dragon* dataset:
@@ -101,7 +114,7 @@ For all versions the same input parameters (``correspondences``, ``neighbors``, 
 
 **\*** Unfortunately, I haven't found an implementation of a kd tree in Octave (it is not yet implemented in the [Statistics](https://wiki.octave.org/Statistics_package) package). Thus, a (very time-consuming!) exhaustive nearest neighbor search is used instead. For larger datasets the Octave timings are missing, as the distance matrix does not fit into memory.
 
-** Not possible yet, as partial overlap of the point clouds can currently only be handled by the Matlab and Python implementation (see also todo below).
+** Not possible yet, as partial overlap of the point clouds can currently only be handled by the Matlab and Python implementation (see table with extended features above).
 
 ## References
 
