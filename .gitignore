@@ -7,3 +7,6 @@ c++/src/nanoflann.hpp
 python/__pycache__/
 python/check/
 julia/check/
+python/simpleicp.egg-info/
+python/dist/
+python/simpleicp/__pycache__/

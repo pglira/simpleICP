@@ -94,7 +94,7 @@ All implementations generate the same screen output. This is an example from the
 
 ## Test data sets
 
-The test data sets are included in the [data](data) subfolder. An example call for each language can be found in the ``run_simpleicp.*`` files, e.g. [run_simpleicp.py](python/run_simpleicp.py) for the python version.
+The test data sets are included in the [data](data) subfolder. An example call for each language can be found in the ``run_simpleicp.*`` files, e.g. [run_simpleicp.py](python/simpleicp/tests/run_simpleicp.py) for the python version.
 
 | Dataset | | pc1 (no_pts) | pc2 (no_pts) | Overlap | Source |
 | :--- | --- | --- | --- | --- | --- |

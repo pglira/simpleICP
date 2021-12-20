@@ -8,7 +8,7 @@
             "name": "run_simpleicp.py",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/run_simpleicp.py",
+            "program": "${workspaceFolder}/simpleicp/tests/run_simpleicp.py",
             "console": "integratedTerminal"
         }
     ]

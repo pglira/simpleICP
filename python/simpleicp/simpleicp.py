@@ -9,7 +9,7 @@ from typing import Tuple
 import numpy as np
 from scipy import spatial, stats
 
-from pointcloud import PointCloud
+from .pointcloud import PointCloud
 
 
 def log(text: str):
