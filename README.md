@@ -59,7 +59,7 @@ The extended features are currently *not* implemented in all languages. The diff
 
 | Feature | C++ | Julia | Matlab | Octave | Python |
 | --- | --- | --- | --- | --- | --- |
-| **partial overlap** | no | yes | yes | no | yes |
+| **partial overlap** | no | yes | yes | yes | yes |
 
 Description of extended features:
 
