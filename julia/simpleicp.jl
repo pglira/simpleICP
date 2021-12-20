@@ -294,6 +294,8 @@ function simpleicp(X_fix::Array, X_mov::Array;
     @sprintf("[%12.6f %12.6f %12.6f %12.6f]\n", H[4,1], H[4,2], H[4,3], H[4,4])
     @info "Finished in " * @sprintf("%.3f", dt) * " seconds!"
 
-    return H
+    X_mov_transformed = [pcmov.x pcmov.y pcmov.z]
+
+    return H, X_mov_transformed
 
 end
