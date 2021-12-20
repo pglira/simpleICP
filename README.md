@@ -110,16 +110,16 @@ These are the runtimes on my PC for the data sets above:
 
 | Dataset             | C++   | Julia | Matlab | Octave* | Python |
 | :--- | ---: | ---: | ---: | ---: | ---: |
-| *Dragon*            | 0.13s | 3.99s |  1.34s | 83.7s   | 0.89s  |
+| *Dragon*            | 0.13s | 3.99s |  1.34s | 95.7s   | 0.89s  |
 | *Airborne Lidar*    | 4.08s | 5.38s | 15.08s | -       | 5.45s  |
 | *Terrestrial Lidar* | 3.25s | 5.22s | 13.24s | -       | 5.68s  |
-| *Bunny*             | **    | 0.38s |  0.37s | **      | 0.80s  |
+| *Bunny*             | **    | 0.38s |  0.37s | 72.8s   | 0.80s  |
 
 For all versions the same input parameters (``correspondences``, ``neighbors``, ...) are used.
 
 **\*** Unfortunately, I haven't found an implementation of a kd tree in Octave (it is not yet implemented in the [Statistics](https://wiki.octave.org/Statistics_package) package). Thus, a (very time-consuming!) exhaustive nearest neighbor search is used instead. For larger datasets the Octave timings are missing, as the distance matrix does not fit into memory.
 
-** Not possible yet, as partial overlap of the point clouds can currently only be handled by the Julia, Matlab, and Python implementation (see table with extended features above).
+** Not possible yet, as partial overlap of the point clouds is currently not available in the C++ implementation (see table with extended features above).
 
 ## References
 

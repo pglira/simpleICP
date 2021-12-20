@@ -1,4 +1,4 @@
-function H = simpleicp(XFix, XMov, varargin)
+function [H, XmovT] = simpleicp(XFix, XMov, varargin)
 
   p = parseParameters(XFix, XMov, varargin{:});
 
@@ -7,7 +7,17 @@ function H = simpleicp(XFix, XMov, varargin)
   pcFix = pointcloud(XFix(:,1), XFix(:,2), XFix(:,3));
   pcMov = pointcloud(XMov(:,1), XMov(:,2), XMov(:,3));
 
-  log('Select points for correspondences in fixed point cloud ...');
+  if ~isinf(p.maxOverlapDistance)
+    log('Consider partial overlap of point clouds ...');
+    pcFix.selectInRange([pcMov.x pcMov.y pcMov.z], p.maxOverlapDistance);
+    if numel(pcFix.sel) == 0
+      error(['Point clouds do not overlap within maxOverlapDistance = %.3f! ' ...
+             'Consider increasing the value of maxOverlapDistance.'], ...
+             p.maxOverlapDistance)
+    end
+  end
+
+  log('Select points for correspondences within overlap area of fixed point cloud ...');
   pcFix.selectNPoints(p.correspondences);
   selOrig = pcFix.sel;
 
@@ -51,6 +61,8 @@ function H = simpleicp(XFix, XMov, varargin)
 
   end
 
+  XmovT = [pcMov.x pcMov.y pcMov.z];
+
   log('Estimated transformation matrix H:');
   log(sprintf('[%12.6f %12.6f %12.6f %12.6f]', H(1,1:4)));
   log(sprintf('[%12.6f %12.6f %12.6f %12.6f]', H(2,1:4)));
@@ -73,6 +85,8 @@ function p = parseParameters(XFix, XMov, varargin)
   p.addParamValue("neighbors", 10, val_neighbors);
   val_minPlanarity = @(x) isnumeric (x) && x>=0 && x<1;
   p.addParamValue("minPlanarity", 0.3, val_minPlanarity);
+  val_maxOverlapDistance = @(x) isnumeric (x) && x>=0;
+  p.addParamValue("maxOverlapDistance", Inf, val_maxOverlapDistance);
   val_minChange = @(x) isnumeric (x) && x>0;
   p.addParamValue("minChange", 1, val_minChange);
   val_maxIterations = @(x) isinteger (x) && x>0;

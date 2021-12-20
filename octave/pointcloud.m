@@ -26,15 +26,26 @@ classdef pointcloud < handle
 
       obj.noPoints = numel(x);
 
+      obj.sel = transpose(1:obj.noPoints);
+
+    endfunction
+
+    function selectInRange(obj, X, range)
+
+      [~, distance] = knnsearch(X, [obj.x(obj.sel) obj.y(obj.sel) obj.z(obj.sel)], 1);
+      keep = distance <= range;
+      obj.sel = obj.sel(keep);
+
     endfunction
 
     function selectNPoints(obj, n)
 
-      if obj.noPoints > n
-          obj.sel = transpose(round(linspace(1, obj.noPoints, n)));
-      else
-          obj.sel = transpose(1:obj.noPoints);
-      end
+        noSelectedPoints = numel(obj.sel);
+
+        if noSelectedPoints > n
+            idx = transpose(round(linspace(1, noSelectedPoints, n)));
+            obj.sel = obj.sel(idx);
+        end
 
     endfunction
 
