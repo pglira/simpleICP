@@ -5,16 +5,42 @@ pkg"add StatsBase"
 
 include("simpleicp.jl")
 
-path_pc_fix = "../data/dragon1.xyz"
-path_pc_mov = "../data/dragon2.xyz"
+dataset = "all"
+write_results = false
 
-# path_pc_fix = "../data/airborne_lidar1.xyz"
-# path_pc_mov = "../data/airborne_lidar2.xyz"
+if cmp(dataset, "Dragon") == 0 || cmp(dataset, "all") == 0
+    println("Processing dataset \"Dragon\"")
+    X_fix = readdlm("../data/dragon1.xyz")
+    X_mov = readdlm("../data/dragon2.xyz")
+    H, X_mov_transformed = simpleicp(X_fix, X_mov)
+end
 
-# path_pc_fix = "../data/terrestrial_lidar1.xyz"
-# path_pc_mov = "../data/terrestrial_lidar2.xyz"
+if cmp(dataset, "Airborne Lidar") == 0 || cmp(dataset, "all") == 0
+    println("Processing dataset \"Airborne Lidar\"")
+    X_fix = readdlm("../data/airborne_lidar1.xyz")
+    X_mov = readdlm("../data/airborne_lidar2.xyz")
+    H, X_mov_transformed = simpleicp(X_fix, X_mov)
+end
 
-X_fix = readdlm(path_pc_fix)
-X_mov = readdlm(path_pc_mov)
+if cmp(dataset, "Terrestrial Lidar") == 0 || cmp(dataset, "all") == 0
+    println("Processing dataset \"Terrestrial Lidar\"")
+    X_fix = readdlm("../data/terrestrial_lidar1.xyz")
+    X_mov = readdlm("../data/terrestrial_lidar2.xyz")
+    H, X_mov_transformed = simpleicp(X_fix, X_mov)
+end
 
-H = simpleicp(X_fix, X_mov)
+if cmp(dataset, "Bunny") == 0 || cmp(dataset, "all") == 0
+    println("Processing dataset \"Bunny\"")
+    X_fix = readdlm("../data/bunny_part1.xyz")
+    X_mov = readdlm("../data/bunny_part2.xyz")
+    H, X_mov_transformed = simpleicp(X_fix, X_mov, max_overlap_distance=0.01)
+end
+
+# Export original and adjusted point clouds to xyz files to check the result
+if write_results
+    target_dir = "check"
+    mkpath(target_dir)
+    writedlm(joinpath(target_dir, "X_fix.xyz"), X_fix)
+    writedlm(joinpath(target_dir, "X_mov.xyz"), X_mov)
+    writedlm(joinpath(target_dir, "X_mov_transformed.xyz"), X_mov_transformed)
+end
