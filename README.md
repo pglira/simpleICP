@@ -24,7 +24,11 @@ Also available at:
 
 [![View simpleICP on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/81273-simpleicp)
 
-## Basic features of the ICP algorithm
+## Features of the ICP algorithm
+
+### Basic features
+
+The following basic features are implemented in all languages:
 
 - Usage of the signed **point-to-plane distance** (instead of the point-to-point distance) as error metric. Main reasons:
   - higher convergence speed, see e.g. [here](https://www.youtube.com/watch?v=LcghboLgTiA) and [here](https://ieeexplore.ieee.org/abstract/document/924423)
@@ -50,7 +54,7 @@ Also available at:
 
 ### Extended features
 
-There are some extended features which are currently not implemented in all languages. The differences are documented in the following table:
+The extended features are currently *not* implemented in all languages. The differences are documented in the following table:
 
 | Feature | C++ | Julia | Matlab | Octave | Python |
 | --- | --- | --- | --- | --- | --- |
