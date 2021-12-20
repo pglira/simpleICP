@@ -1,9 +1,10 @@
 #include "corrpts.h"
 #include "simpleicp.h"
 
-CorrPts::CorrPts(PointCloud& pc1, PointCloud& pc2) : pc1_{pc1}, pc2_{pc2} {}
+CorrPts::CorrPts(PointCloud &pc1, PointCloud &pc2) : pc1_{pc1}, pc2_{pc2} {}
 
-void CorrPts::Match() {
+void CorrPts::Match()
+{
   auto X_sel_pc1 = pc1_.GetXOfSelectedPts();
   auto X_sel_pc2 = pc2_.GetXOfSelectedPts();
 
@@ -12,7 +13,8 @@ void CorrPts::Match() {
 
   Eigen::MatrixXi mat_idx_nn(idx_pc1_.size(), 1);
   mat_idx_nn = KnnSearch(X_sel_pc2, X_sel_pc1, 1);
-  for (int i = 0; i < mat_idx_nn.rows(); i++) {
+  for (int i = 0; i < mat_idx_nn.rows(); i++)
+  {
     idx_pc2_[i] = mat_idx_nn(i, 0);
   }
 
@@ -20,18 +22,22 @@ void CorrPts::Match() {
   ComputeDists();
 }
 
-void CorrPts::GetPlanarityFromPc1() {
+void CorrPts::GetPlanarityFromPc1()
+{
   planarity_ = Eigen::VectorXd(idx_pc1_.size());
-  for (int i = 0; i < idx_pc1_.size(); i++) {
+  for (int i = 0; i < idx_pc1_.size(); i++)
+  {
     planarity_[i] = pc1_.planarity()[idx_pc1_[i]];
   }
 }
 
-void CorrPts::ComputeDists() {
+void CorrPts::ComputeDists()
+{
   dists_ = Eigen::VectorXd(idx_pc1_.size());
   dists_.fill(NAN);
 
-  for (int i = 0; i < idx_pc1_.size(); i++) {
+  for (int i = 0; i < idx_pc1_.size(); i++)
+  {
     double x_pc1 = pc1_.X()(idx_pc1_[i], 0);
     double y_pc1 = pc1_.X()(idx_pc1_[i], 1);
     double z_pc1 = pc1_.X()(idx_pc1_[i], 2);
@@ -50,12 +56,15 @@ void CorrPts::ComputeDists() {
   }
 }
 
-void CorrPts::Reject(const double& min_planarity) {
+void CorrPts::Reject(const double &min_planarity)
+{
   auto med{Median(dists_)};
   auto sigmad{1.4826 * MAD(dists_)};
   std::vector<bool> keep(dists_.size(), true);
-  for (int i = 0; i < dists_.size(); i++) {
-    if ((abs(dists_[i] - med) > 3 * sigmad) | (planarity_[i] < min_planarity)) {
+  for (int i = 0; i < dists_.size(); i++)
+  {
+    if ((abs(dists_[i] - med) > 3 * sigmad) | (planarity_[i] < min_planarity))
+    {
       keep[i] = false;
     }
   }
@@ -64,8 +73,10 @@ void CorrPts::Reject(const double& min_planarity) {
   std::vector<int> idx_pc2_new(no_remaining_pts);
   Eigen::VectorXd dists_new(no_remaining_pts);
   int j{0};
-  for (int i = 0; i < dists_.size(); i++) {
-    if (keep[i]) {
+  for (int i = 0; i < dists_.size(); i++)
+  {
+    if (keep[i])
+    {
       idx_pc1_new[j] = idx_pc1_[i];
       idx_pc2_new[j] = idx_pc2_[i];
       dists_new[j] = dists_[i];
@@ -77,14 +88,16 @@ void CorrPts::Reject(const double& min_planarity) {
   dists_ = dists_new;
 }
 
-void CorrPts::EstimateRigidBodyTransformation(Eigen::Matrix<double, 4, 4>& H,
-                                              Eigen::VectorXd& residuals) {
+void CorrPts::EstimateRigidBodyTransformation(Eigen::Matrix<double, 4, 4> &H,
+                                              Eigen::VectorXd &residuals)
+{
   auto no_corr_pts{idx_pc1_.size()};
 
   Eigen::MatrixXd A(no_corr_pts, 6);
   Eigen::VectorXd l(no_corr_pts);
 
-  for (int i = 0; i < no_corr_pts; i++) {
+  for (int i = 0; i < no_corr_pts; i++)
+  {
     double x_pc1 = pc1_.X()(idx_pc1_[i], 0);
     double y_pc1 = pc1_.X()(idx_pc1_[i], 1);
     double z_pc1 = pc1_.X()(idx_pc1_[i], 2);
@@ -140,8 +153,8 @@ void CorrPts::EstimateRigidBodyTransformation(Eigen::Matrix<double, 4, 4>& H,
 }
 
 // Getters
-const PointCloud& CorrPts::pc1() { return pc1_; }
-const PointCloud& CorrPts::pc2() { return pc2_; }
-const std::vector<int>& CorrPts::idx_pc1() { return idx_pc1_; }
-const std::vector<int>& CorrPts::idx_pc2() { return idx_pc2_; }
-const Eigen::VectorXd& CorrPts::dists() { return dists_; }
+const PointCloud &CorrPts::pc1() { return pc1_; }
+const PointCloud &CorrPts::pc2() { return pc2_; }
+const std::vector<int> &CorrPts::idx_pc1() { return idx_pc1_; }
+const std::vector<int> &CorrPts::idx_pc2() { return idx_pc2_; }
+const Eigen::VectorXd &CorrPts::dists() { return dists_; }

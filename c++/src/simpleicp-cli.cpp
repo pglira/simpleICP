@@ -2,9 +2,10 @@
 #include "cxxopts.hpp"
 #include "simpleicp.h"
 
-Eigen::MatrixXd ImportXYZFileToMatrix(const std::string& path_to_pc);
+Eigen::MatrixXd ImportXYZFileToMatrix(const std::string &path_to_pc);
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv)
+{
   cxxopts::Options options("simpleicp", "A simple version of the ICP algorithm.");
 
   // clang-format off
@@ -30,7 +31,8 @@ int main(int argc, char** argv) {
 
   auto result = options.parse(argc, argv);
 
-  if (result.count("help") || argc == 1) {
+  if (result.count("help") || argc == 1)
+  {
     std::cout << options.help() << std::endl;
     exit(0);
   }
@@ -49,25 +51,31 @@ int main(int argc, char** argv) {
   return 0;
 }
 
-Eigen::MatrixXd ImportXYZFileToMatrix(const std::string& path_to_pc) {
+Eigen::MatrixXd ImportXYZFileToMatrix(const std::string &path_to_pc)
+{
   std::ifstream data(path_to_pc);
-  if (data.is_open()) {
+  if (data.is_open())
+  {
     // Read data from file
     std::vector<std::vector<std::string>> parsedData;
     std::string line;
-    while (getline(data, line)) {
+    while (getline(data, line))
+    {
       std::stringstream lineStream(line);
-      std::string cell;  // single value
+      std::string cell; // single value
       std::vector<std::string> parsedRow;
-      while (getline(lineStream, cell, ' ')) {
+      while (getline(lineStream, cell, ' '))
+      {
         parsedRow.push_back(cell);
       }
       parsedData.push_back(parsedRow);
     }
 
     // Check if each line contains exactly 3 values
-    for (int i = 0; i < parsedData.size(); i++) {
-      if (parsedData[i].size() != 3) {
+    for (int i = 0; i < parsedData.size(); i++)
+    {
+      if (parsedData[i].size() != 3)
+      {
         std::cerr << "Line " << i + 1 << " does not contain exactly 3 values!" << std::endl;
         exit(-1);
       }
@@ -75,11 +83,16 @@ Eigen::MatrixXd ImportXYZFileToMatrix(const std::string& path_to_pc) {
 
     // Create eigen array
     Eigen::MatrixXd X(parsedData.size(), 3);
-    for (int i = 0; i < parsedData.size(); i++) {
-      for (int j = 0; j < parsedData[i].size(); j++) {
-        try {
+    for (int i = 0; i < parsedData.size(); i++)
+    {
+      for (int j = 0; j < parsedData[i].size(); j++)
+      {
+        try
+        {
           X(i, j) = stod(parsedData[i][j]);
-        } catch (std::exception& e) {
+        }
+        catch (std::exception &e)
+        {
           std::cerr << "Conversion of " << parsedData[i][j] << " on row/column=" << i << "/" << j
                     << " is not possible!" << std::endl;
           exit(-1);
@@ -88,8 +101,9 @@ Eigen::MatrixXd ImportXYZFileToMatrix(const std::string& path_to_pc) {
     }
 
     return X;
-
-  } else {
+  }
+  else
+  {
     std::cerr << "Error opening file!" << std::endl;
     exit(-1);
   }
