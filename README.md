@@ -23,7 +23,7 @@ The C++ version can be used through a cli interface.
 Also available at:
 
 - Matlab: [![View simpleICP on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/81273-simpleicp)
-- Python: ![](https://img.shields.io/pypi/v/simpleicp)
+- Python: [![](https://img.shields.io/pypi/v/simpleicp)](https://pypi.org/project/simpleicp)
 
 ## Features of the ICP algorithm
 
