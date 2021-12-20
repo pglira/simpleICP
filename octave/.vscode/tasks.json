@@ -4,9 +4,9 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Run current file in octave",
+            "label": "run_simpleicp.m",
             "type": "shell",
-            "command": "octave --no-gui -W ${file}"
+            "command": "octave --no-gui -W ${workspaceFolder}/run_simpleicp.m"
         }
     ]
 }
