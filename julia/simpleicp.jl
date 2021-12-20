@@ -31,17 +31,35 @@ mutable struct PointCloud
             fill(NaN, no_points),
             fill(NaN, no_points),
             no_points,
-            Int64[])
+            collect(1:no_points))
     end
+
+end
+
+function select_in_range!(pc::PointCloud, X::Array, max_range::Number)
+
+    size(X)[2] == 3 || error(""""X" must have 3 columns""")
+    max_range > 0 || error(""""max_range" must be > 0""")
+
+    kdtree = KDTree(X')
+
+    query_points = [pc.x[pc.sel]'; pc.y[pc.sel]'; pc.z[pc.sel]']
+
+    _, distances = nn(kdtree, query_points)
+
+    keep = [d <= max_range for d in distances]
+
+    pc.sel = pc.sel[keep]
 
 end
 
 function select_n_points!(pc::PointCloud, n)
 
-    if pc.no_points > n
-        pc.sel = round.(Int, range(1, pc.no_points, length=n))
-    else
-        pc.sel = collect(1:pc.no_points)
+    no_selected_points = length(pc.sel)
+
+    if no_selected_points > n
+        idx = round.(Int, range(1, no_selected_points, length=n))
+        pc.sel = pc.sel[idx]
     end
 
 end
@@ -194,6 +212,7 @@ function simpleicp(X_fix::Array, X_mov::Array;
                    correspondences::Integer=1000,
                    neighbors::Integer=10,
                    min_planarity::Number=0.3,
+                   max_overlap_distance::Number=Inf,
                    min_change::Number=3,
                    max_iterations::Integer=100)
 
@@ -210,7 +229,16 @@ function simpleicp(X_fix::Array, X_mov::Array;
         pcfix = PointCloud(X_fix[:,1], X_fix[:,2], X_fix[:,3])
         pcmov = PointCloud(X_mov[:,1], X_mov[:,2], X_mov[:,3])
 
-        @info "Select points for correspondences in fixed point cloud ..."
+        if isfinite(max_overlap_distance)
+            @info "Consider partial overlap of point clouds ..."
+            select_in_range!(pcfix, X_mov, max_overlap_distance)
+            if length(pcfix.sel) == 0
+                error(@sprintf("Point clouds do not overlap within max_overlap_distance = %.3f! ",
+                max_overlap_distance) * "Consider increasing the value of max_overlap_distance.")
+            end
+        end
+
+        @info "Select points for correspondences within overlap area of fixed point cloud ..."
         select_n_points!(pcfix, correspondences)
         sel_orig = pcfix.sel
 
