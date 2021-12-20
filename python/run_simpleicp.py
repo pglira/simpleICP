@@ -8,31 +8,36 @@ import numpy as np
 
 import simpleicp
 
-dataset = "Bunny"
-export_results = True
-plot_results = True
+dataset = "all"
+export_results = False
+plot_results = False
 
-if dataset == "Dragon":
+if dataset == "Dragon" or dataset == "all":
+    print('Processing dataset "Dragon"')
     X_fix = np.genfromtxt(Path("../data/dragon1.xyz"))
     X_mov = np.genfromtxt(Path("../data/dragon2.xyz"))
     H, X_mov_transformed = simpleicp.simpleicp(X_fix, X_mov)
 
-elif dataset == "Airborne Lidar":
+if dataset == "Airborne Lidar" or dataset == "all":
+    print('Processing dataset "Airborne Lidar"')
     X_fix = np.genfromtxt(Path("../data/airborne_lidar1.xyz"))
     X_mov = np.genfromtxt(Path("../data/airborne_lidar2.xyz"))
     H, X_mov_transformed = simpleicp.simpleicp(X_fix, X_mov)
 
-elif dataset == "Terrestrial Lidar":
+if dataset == "Terrestrial Lidar" or dataset == "all":
+    print('Processing dataset "Terrestrial Lidar"')
     X_fix = np.genfromtxt(Path("../data/terrestrial_lidar1.xyz"))
     X_mov = np.genfromtxt(Path("../data/terrestrial_lidar2.xyz"))
     H, X_mov_transformed = simpleicp.simpleicp(X_fix, X_mov)
 
-elif dataset == "Bunny":
+if dataset == "Bunny" or dataset == "all":
+    print('Processing dataset "Bunny"')
     X_fix = np.genfromtxt(Path("../data/bunny_part1.xyz"))
     X_mov = np.genfromtxt(Path("../data/bunny_part2.xyz"))
     H, X_mov_transformed = simpleicp.simpleicp(X_fix, X_mov, max_overlap_distance=0.01)
 
-elif dataset == "Multisensor":
+if dataset == "Multisensor" or dataset == "all":
+    print('Processing dataset "Multisensor"')
     X_fix = np.genfromtxt(Path("../data/multisensor_lidar.xyz"))
     X_mov = np.genfromtxt(Path("../data/multisensor_radar.xyz"))
     H, X_mov_transformed = simpleicp.simpleicp(X_fix, X_mov, max_overlap_distance=2.0)
