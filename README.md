@@ -135,13 +135,3 @@ Please cite related papers if you use this code:
 ## Related projects
 
 - [globalICP](https://github.com/pglira/Point_cloud_tools_for_Matlab): A multi-scan ICP implementation for Matlab
-
-## Todo
-
-- [ ] Consider partial overlap of point clouds
-  - [ ] C++
-  - [ ] Julia
-  - [X] Matlab
-  - [ ] Octave
-  - [X] Python
-- [ ] Add outline of the algorithm
