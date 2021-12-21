@@ -12,3 +12,5 @@ python/dist/
 python/simpleicp/__pycache__/
 README.md
 octave/check/
+octave/octave-workspace
+python/build/
