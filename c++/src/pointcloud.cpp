@@ -29,6 +29,49 @@ std::vector<int> PointCloud::GetIdxOfSelectedPts()
   return idx;
 }
 
+void PointCloud::SelectInRange(const Eigen::MatrixX3d &X, const double &max_range)
+{
+  auto sel_idx{GetIdxOfSelectedPts()};
+  auto no_selected_points = sel_idx.size();
+
+  // nn search
+  auto X_query{GetXOfSelectedPts()};
+  auto idx_nn{KnnSearch(X, X_query)};
+
+  // Compute distances to nn
+  Eigen::VectorXd dists(no_selected_points);
+  dists.fill(NAN);
+
+  for (int i = 0; i < no_selected_points; i++)
+  {
+    double x_query{X_query(i, 0)};
+    double y_query{X_query(i, 1)};
+    double z_query{X_query(i, 2)};
+
+    double x_nn{X(idx_nn(i), 0)};
+    double y_nn{X(idx_nn(i), 1)};
+    double z_nn{X(idx_nn(i), 2)};
+
+    double dx{x_query - x_nn};
+    double dy{y_query - y_nn};
+    double dz{z_query - z_nn};
+
+    double dist{sqrt(dx * dx + dy * dy + dz * dz)};
+
+    dists(i) = dist;
+  }
+
+  // Deselect points which exceed maximum range
+  for (int i = 0; i < no_selected_points; i++)
+  {
+    if (dists(i) > max_range)
+    {
+      sel_[sel_idx[i]] = false;
+    }
+  }
+
+}
+
 void PointCloud::SelectNPts(const int &n)
 {
   auto sel_idx{GetIdxOfSelectedPts()};

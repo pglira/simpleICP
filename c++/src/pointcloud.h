@@ -13,6 +13,8 @@ public:
 
   std::vector<int> GetIdxOfSelectedPts();
 
+  void SelectInRange(const Eigen::MatrixX3d &X, const double &max_range);
+
   void SelectNPts(const int &n);
 
   void EstimateNormals(const int &neighbors);

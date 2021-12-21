@@ -52,45 +52,39 @@ The following basic features are implemented in all languages:
   2. the planarity of the plane used to estimate the normal vector (see below). The planarity is defined as ``P = (ev2-ev3)/ev1`` (``ev1 >= ev2 >= ev3``), where ``ev`` are the eigenvalues of the covariance matrix of the points used to estimate the normal vector. A correspondence ``i`` is rejected if ``P_i < min_planarity``. Default is ``min_planarity = 0.3``.
 - After each iteration a **convergence criteria** is tested: if the mean and the standard deviation of the point-to-plane distances do not change more than ``min_change`` percent, the iteration is stopped. Default is ``min_change = 1``.
 - The normal vector of the plane (needed to compute the point-to-plane distance) is estimated from the fixed point cloud using a fixed number of neighbors. Default is ``neighbors = 10``.
-
-### Extended features
-
-The extended features are currently *not* implemented in all languages. The differences are documented in the following table:
-
-| Feature | C++ | Julia | Matlab | Octave | Python |
-| --- | --- | --- | --- | --- | --- |
-| **partial overlap** | no | yes | yes | yes | yes |
-
-Description of extended features:
-
-- **partial overlap**: point clouds must not fully overlap, i.e. a partial overlap of the point cloud is allowed. An example for such a case is the
-*Bunny* dataset, see [here](#test-data-sets). The initial overlapping area between two point clouds can be defined by the parameter ``max_overlap_distance``. More specifically, the correspondences are only selected across points of the fixed point cloud for which the initial distance to the nearest neighbor of the movable point cloud is ``<= max_overlap_distance``.
+- The point clouds must not fully overlap, i.e. a partial overlap of the point cloud is allowed. An example for such a case is the *Bunny* dataset, see [here](#test-data-sets). The initial overlapping area between two point  clouds can be defined by the parameter ``max_overlap_distance``. More specifically, the correspondences are only selected across points of the fixed point cloud for which the initial distance to the nearest neighbor of the movable point cloud is ``<= max_overlap_distance``.
 
 ## Output
 
 All implementations generate the same screen output. This is an example from the C++ version for the *Dragon* dataset:
 
 ```
-> run_simpleicp
-[10:34:10.277] Create point cloud objects ...
-[10:34:10.278] Select points for correspondences in fixed point cloud ...
-[10:34:10.278] Estimate normals of selected points ...
-[10:34:10.291] Start iterations ...
-[10:34:10.310] Iteration | correspondences | mean(residuals) |  std(residuals)
-[10:34:10.310]         0 |             984 |          0.0388 |          0.3160
-[10:34:10.310]         1 |             984 |          0.0011 |          0.2520
-[10:34:10.327]         2 |             996 |          0.0014 |          0.1630
-[10:34:10.342]         3 |             993 |          0.0059 |          0.0751
-[10:34:10.357]         4 |             974 |          0.0007 |          0.0148
-[10:34:10.373]         5 |             980 |          0.0001 |          0.0021
-[10:34:10.388]         6 |             996 |          0.0001 |          0.0021
-[10:34:10.404] Convergence criteria fulfilled -> stop iteration!
-[10:34:10.404] Estimated transformation matrix H:
-[10:34:10.404] [    0.998657     0.052625    -0.034241    -0.204408]
-[10:34:10.404] [   -0.052121     0.998995     0.019899    -0.407677]
-[10:34:10.404] [    0.034893    -0.018484     0.999439    -0.594463]
-[10:34:10.404] [    0.000000     0.000000     0.000000     1.000000]
-[10:34:10.404] Finished in 0.127 seconds!
+$ run_simpleicp.sh
+Processing dataset "Bunny"
+[09:42:37.690] Create point cloud objects ...
+[09:42:37.690] Consider partial overlap of point clouds ...
+[09:42:37.770] Select points for correspondences within overlap area of fixed point cloud ...
+[09:42:37.770] Estimate normals of selected points ...
+[09:42:37.775] Start iterations ...
+[09:42:37.780] Iteration | correspondences | mean(residuals) |  std(residuals)
+[09:42:37.780]         0 |             960 |         -0.0003 |          0.0025
+[09:42:37.780]         1 |             960 |          0.0000 |          0.0013
+[09:42:37.785]         2 |             903 |         -0.0000 |          0.0005
+[09:42:37.790]         3 |             903 |         -0.0000 |          0.0004
+[09:42:37.794]         4 |             883 |         -0.0000 |          0.0003
+[09:42:37.799]         5 |             877 |         -0.0000 |          0.0003
+[09:42:37.803]         6 |             869 |         -0.0000 |          0.0002
+[09:42:37.808]         7 |             860 |         -0.0000 |          0.0002
+[09:42:37.813]         8 |             855 |         -0.0000 |          0.0002
+[09:42:37.818]         9 |             851 |         -0.0000 |          0.0002
+[09:42:37.822]        10 |             849 |         -0.0000 |          0.0002
+[09:42:37.827] Convergence criteria fulfilled -> stop iteration!
+[09:42:37.827] Estimated transformation matrix H:
+[09:42:37.827] [    0.990045    -0.172046     0.000965    -0.000304]
+[09:42:37.827] [    0.172037     0.990039    -0.001838    -0.000220]
+[09:42:37.827] [   -0.000824     0.001815     1.000023    -0.000015]
+[09:42:37.827] [    0.000000     0.000000     0.000000     1.000000]
+[09:42:37.827] Finished in 0.137 seconds!
 ```
 
 ## Test data sets
@@ -110,16 +104,14 @@ These are the runtimes on my PC for the data sets above:
 
 | Dataset             | C++   | Julia | Matlab | Octave* | Python |
 | :--- | ---: | ---: | ---: | ---: | ---: |
-| *Dragon*            | 0.13s | 3.99s |  1.34s | 95.7s   | 0.89s  |
-| *Airborne Lidar*    | 4.08s | 5.38s | 15.08s | -       | 5.45s  |
-| *Terrestrial Lidar* | 3.25s | 5.22s | 13.24s | -       | 5.68s  |
-| *Bunny*             | **    | 0.38s |  0.37s | 72.8s   | 0.80s  |
+| *Dragon*            | 0.16s | 3.99s |  1.34s | 95.7s   | 0.89s  |
+| *Airborne Lidar*    | 3.98s | 5.38s | 15.08s | -       | 5.45s  |
+| *Terrestrial Lidar* | 3.62s | 5.22s | 13.24s | -       | 5.68s  |
+| *Bunny*             | 0.13s | 0.38s |  0.37s | 72.8s   | 0.80s  |
 
 For all versions the same input parameters (``correspondences``, ``neighbors``, ...) are used.
 
 **\*** Unfortunately, I haven't found an implementation of a kd tree in Octave (it is not yet implemented in the [Statistics](https://wiki.octave.org/Statistics_package) package). Thus, a (very time-consuming!) exhaustive nearest neighbor search is used instead. For larger datasets the Octave timings are missing, as the distance matrix does not fit into memory.
-
-** Not possible yet, as partial overlap of the point clouds is currently not available in the C++ implementation (see table with extended features above).
 
 ## References
 

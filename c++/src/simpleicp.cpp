@@ -10,6 +10,7 @@ Eigen::Matrix<double, 4, 4> SimpleICP(const Eigen::MatrixXd &X_fix,
                                       const int &correspondences,
                                       const int &neighbors,
                                       const double &min_planarity,
+                                      const double &max_overlap_distance,
                                       const double &min_change,
                                       const int &max_iterations)
 {
@@ -19,7 +20,24 @@ Eigen::Matrix<double, 4, 4> SimpleICP(const Eigen::MatrixXd &X_fix,
   PointCloud pc_fix{X_fix};
   PointCloud pc_mov{X_mov};
 
-  printf("[%s] Select points for correspondences in fixed point cloud ...\n", Timestamp());
+  if (max_overlap_distance > 0)
+  {
+    printf("[%s] Consider partial overlap of point clouds ...\n", Timestamp());
+    pc_fix.SelectInRange(pc_mov.X(), max_overlap_distance);
+    if (pc_fix.GetIdxOfSelectedPts().size() == 0)
+    {
+      char buff[200];
+      snprintf(buff, sizeof(buff),
+               "Point clouds do not overlap within max_overlap_distance = %.5f. "
+               "Consider increasing the value of max_overlap_distance.\n",
+               max_overlap_distance);
+      std::string error_msg{buff};
+      throw std::runtime_error(error_msg);
+    }
+  }
+
+  printf("[%s] Select points for correspondences within overlap area of fixed point cloud ...\n",
+         Timestamp());
   pc_fix.SelectNPts(correspondences);
 
   printf("[%s] Estimate normals of selected points ...\n", Timestamp());
