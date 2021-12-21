@@ -56,7 +56,7 @@ The following basic features are implemented in all languages:
 
 ## Output
 
-All implementations generate the same screen output. This is an example from the C++ version for the *Dragon* dataset:
+All implementations generate the same screen output. This is an example from the C++ version for the *Bunny* dataset:
 
 ```
 $ run_simpleicp.sh
