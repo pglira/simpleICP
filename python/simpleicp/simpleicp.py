@@ -161,7 +161,7 @@ def simpleicp(
         pcfix.select_in_range(pcmov.X, max_range=max_overlap_distance)
         assert pcfix.no_selected_points > 0, (
             "Point clouds do not overlap within max_overlap_distance = ",
-            f"{max_overlap_distance:.3f}! Consider increasing the value of max_overlap_distance.",
+            f"{max_overlap_distance:.5f}! Consider increasing the value of max_overlap_distance.",
         )
 
     log(

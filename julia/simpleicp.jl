@@ -233,7 +233,7 @@ function simpleicp(X_fix::Array, X_mov::Array;
             @info "Consider partial overlap of point clouds ..."
             select_in_range!(pcfix, X_mov, max_overlap_distance)
             if length(pcfix.sel) == 0
-                error(@sprintf("Point clouds do not overlap within max_overlap_distance = %.3f! ",
+                error(@sprintf("Point clouds do not overlap within max_overlap_distance = %.5f! ",
                 max_overlap_distance) * "Consider increasing the value of max_overlap_distance.")
             end
         end

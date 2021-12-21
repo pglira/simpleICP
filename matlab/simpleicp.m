@@ -18,12 +18,12 @@ function [H, XmovT] = simpleicp(XFix, XMov, nva)
     log('Create point cloud objects ...');
     pcFix = pointcloud(XFix(:,1), XFix(:,2), XFix(:,3));
     pcMov = pointcloud(XMov(:,1), XMov(:,2), XMov(:,3));
-    
+
     if ~isinf(nva.maxOverlapDistance)
         log('Consider partial overlap of point clouds ...');
         pcFix.selectInRange([pcMov.x pcMov.y pcMov.z], nva.maxOverlapDistance);
         if numel(pcFix.sel) == 0
-            error(['Point clouds do not overlap within maxOverlapDistance = %.3f! ' ...
+            error(['Point clouds do not overlap within maxOverlapDistance = %.5f! ' ...
                    'Consider increasing the value of maxOverlapDistance.'], ...
                 nva.maxOverlapDistance);
         end
@@ -74,7 +74,7 @@ function [H, XmovT] = simpleicp(XFix, XMov, nva)
     end
 
     XmovT = [pcMov.x pcMov.y pcMov.z];
-    
+
     log('Estimated transformation matrix H:');
     log(sprintf('[%12.6f %12.6f %12.6f %12.6f]', H(1,1:4)));
     log(sprintf('[%12.6f %12.6f %12.6f %12.6f]', H(2,1:4)));
