@@ -53,23 +53,40 @@ if export_results:
     np.savetxt(target_dir.joinpath(Path("X_mov.xyz")), X_mov)
     np.savetxt(target_dir.joinpath(Path("X_mov_transformed.xyz")), X_mov_transformed)
 
-# Plot original and adjusted point clouds with open3d viewer
+# Plot original and adjusted point clouds with matplotlib
 if plot_results:
-    import open3d as o3d
+    import matplotlib.pyplot as plt
 
-    pcd_fix = o3d.geometry.PointCloud()
-    pcd_fix.points = o3d.utility.Vector3dVector(X_fix)
-    colors = [[1, 0, 0] for i in range(len(pcd_fix.points))]  # red
-    pcd_fix.colors = o3d.utility.Vector3dVector(colors)
+    # We need to select a small subset of points for the plot as scatter plots are very slow in mpl
+    # https://stackoverflow.com/questions/18179928/speeding-up-matplotlib-scatter-plots
+    no_points_to_plot = 10000
+    idx_points_fix = np.random.permutation(np.shape(X_fix)[0])[0:no_points_to_plot]
+    idx_points_mov = np.random.permutation(np.shape(X_mov)[0])[0:no_points_to_plot]
 
-    pcd_mov = o3d.geometry.PointCloud()
-    pcd_mov.points = o3d.utility.Vector3dVector(X_mov)
-    colors = [[0, 1, 0] for i in range(len(pcd_mov.points))]  # green
-    pcd_mov.colors = o3d.utility.Vector3dVector(colors)
-
-    pcd_mov_transformed = o3d.geometry.PointCloud()
-    pcd_mov_transformed.points = o3d.utility.Vector3dVector(X_mov_transformed)
-    colors = [[0, 0, 1] for i in range(len(pcd_mov_transformed.points))]  # blue
-    pcd_mov_transformed.colors = o3d.utility.Vector3dVector(colors)
-
-    o3d.visualization.draw_geometries([pcd_fix, pcd_mov, pcd_mov_transformed])
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection="3d")
+    ax.scatter(
+        X_fix[idx_points_fix, 0],
+        X_fix[idx_points_fix, 1],
+        X_fix[idx_points_fix, 2],
+        c="r",
+        marker=",",
+    )
+    ax.scatter(
+        X_mov[idx_points_mov, 0],
+        X_mov[idx_points_mov, 1],
+        X_mov[idx_points_mov, 2],
+        c="g",
+        marker=",",
+    )
+    ax.scatter(
+        X_mov_transformed[idx_points_mov, 0],
+        X_mov_transformed[idx_points_mov, 1],
+        X_mov_transformed[idx_points_mov, 2],
+        c="b",
+        marker=",",
+    )
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
+    plt.show()
