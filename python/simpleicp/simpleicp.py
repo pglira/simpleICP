@@ -64,8 +64,75 @@ def estimate_rigid_body_transformation(
     x_mov: np.array,
     y_mov: np.array,
     z_mov: np.array,
+    weights_distance_residuals: float,
+    tf_obs: Tuple[float],
+    weights_tf_obs_residuals: Tuple[float],
 ) -> Tuple[np.array, np.array]:
     """Estimate rigid body transformation for a given set of correspondences."""
+
+    (
+        A_correspondences,
+        p_correspondences,
+        l_correspondences,
+    ) = get_Apl_from_correspondences(
+        x_fix,
+        y_fix,
+        z_fix,
+        nx_fix,
+        ny_fix,
+        nz_fix,
+        x_mov,
+        y_mov,
+        z_mov,
+        weights_distance_residuals,
+    )
+
+    if any(weights_tf_obs_residuals):
+
+        A_tf_obs, p_tf_obs, l_tf_obs = get_Apl_from_tf_obs(
+            tf_obs, weights_tf_obs_residuals
+        )
+
+        A = np.vstack((A_correspondences, A_tf_obs))
+        p = np.concatenate((p_correspondences, p_tf_obs))
+        l = np.concatenate((l_correspondences, l_tf_obs))
+
+    else:
+
+        A = A_correspondences
+        p = p_correspondences
+        l = l_correspondences
+
+    # Create a "weighted" version of A and l as the solver below does not support weights as input
+    Aw = A * np.sqrt(p[:, np.newaxis])
+    lw = l * np.sqrt(p)
+
+    x, _, _, _ = np.linalg.lstsq(Aw, lw, rcond=None)
+
+    residuals = A @ x - l
+
+    R = euler_angles_to_linearized_rotation_matrix(x[0], x[1], x[2])
+
+    t = x[3:6]
+
+    H = create_homogeneous_transformation_matrix(R, t)
+
+    return H, residuals
+
+
+def get_Apl_from_correspondences(
+    x_fix: np.array,
+    y_fix: np.array,
+    z_fix: np.array,
+    nx_fix: np.array,
+    ny_fix: np.array,
+    nz_fix: np.array,
+    x_mov: np.array,
+    y_mov: np.array,
+    z_mov: np.array,
+    weights_distance_residuals: float,
+) -> Tuple[np.array, np.array, np.array]:
+    """Get matrix A and vectors p, l from the point-to-plane correspondences."""
 
     A = np.column_stack(
         (
@@ -80,17 +147,31 @@ def estimate_rigid_body_transformation(
 
     l = nx_fix * (x_fix - x_mov) + ny_fix * (y_fix - y_mov) + nz_fix * (z_fix - z_mov)
 
-    x, _, _, _ = np.linalg.lstsq(A, l, rcond=None)
+    no_correspondences = len(x_fix)
+    p = np.full((no_correspondences,), weights_distance_residuals)
 
-    residuals = A @ x - l
+    return A, p, l
 
-    R = euler_angles_to_linearized_rotation_matrix(x[0], x[1], x[2])
 
-    t = x[3:6]
+def get_Apl_from_tf_obs(
+    tf_obs: Tuple[float],
+    weights_tf_obs_residuals: Tuple[float],
+) -> Tuple[np.array, np.array, np.array]:
+    """Get matrix A and vectors p, l from the direct observations of the transform parameters."""
 
-    H = create_homogeneous_transformation_matrix(R, t)
+    A = np.eye(6)
 
-    return H, residuals
+    p = np.array(weights_tf_obs_residuals)
+
+    l = np.array(tf_obs)
+
+    keep = [True if w > 0 else False for w in weights_tf_obs_residuals]
+
+    A = A[keep, :]
+    p = p[keep]
+    l = l[keep]
+
+    return A, p, l
 
 
 def euler_angles_to_linearized_rotation_matrix(
@@ -141,11 +222,19 @@ def simpleicp(
     max_overlap_distance: float = np.inf,
     min_change: float = 1.0,
     max_iterations: int = 100,
+    weights_distance_residuals: float = 1.0,
+    tf_obs: Tuple[float] = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+    weights_tf_obs_residuals: Tuple[float] = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
 ) -> Tuple[np.array, np.array]:
     """Implementation of a rather simple version of the Iterative Closest Point (ICP) algorithm."""
 
+    assert weights_distance_residuals > 0, "Weights must be > 0!"
+    assert len(tf_obs) == 6, "List must have exactly 6 elements!"
+    assert len(weights_tf_obs_residuals) == 6, "List must have exactly 6 elements!"
+    assert all([w >= 0 for w in weights_tf_obs_residuals]), "Weights must be >= 0!"
+
     start_time = time.time()
-    log("Create point cloud objects ...")
+    print("Create point cloud objects ...")
     pcfix = PointCloud(X_fix[:, 0], X_fix[:, 1], X_fix[:, 2])
     pcmov = PointCloud(X_mov[:, 0], X_mov[:, 1], X_mov[:, 2])
 
@@ -176,6 +265,13 @@ def simpleicp(
 
         initial_distances = reject(pcfix, pcmov, min_planarity, initial_distances)
 
+        # Estimate weight of distances if value is < 0
+        # weight = 1/(sig^2), where sig = mad(l)
+        if weights_distance_residuals < 0:
+            weights_distance_residuals = 1 / (
+                stats.median_absolute_deviation(initial_distances) ** 2
+            )
+
         dH, residuals = estimate_rigid_body_transformation(
             pcfix.x_sel,
             pcfix.y_sel,
@@ -186,6 +282,9 @@ def simpleicp(
             pcmov.x_sel,
             pcmov.y_sel,
             pcmov.z_sel,
+            weights_distance_residuals,
+            tf_obs,
+            weights_tf_obs_residuals,
         )
 
         residual_distances.append(residuals)
