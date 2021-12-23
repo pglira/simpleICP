@@ -32,5 +32,5 @@ if [[ "${dataset}" == "Bunny" || "${dataset}" == "all" ]]; then
     ${simpleicp} \
     --fixed ../data/bunny_part1.xyz \
     --movable ../data/bunny_part2.xyz \
-    --max_overlap_distance 0.01
+    --max_overlap_distance 1
 fi

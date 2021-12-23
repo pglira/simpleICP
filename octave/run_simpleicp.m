@@ -2,7 +2,7 @@ clc; clear; close;
 
 pkg load statistics
 
-dataset = "Dragon";
+dataset = "all";
 exportResults = true;
 
 if strcmp(dataset, "Dragon") || strcmp(dataset, "all")
@@ -12,25 +12,27 @@ if strcmp(dataset, "Dragon") || strcmp(dataset, "all")
     [H, XMovT] = simpleicp(XFix, XMov);
 end
 
-if strcmp(dataset, "Airborne Lidar") || strcmp(dataset, "all")
-    disp('Processing dataset "Airborne Lidar"')
-    XFix = dlmread("../data/airborne_lidar1.xyz");
-    XMov = dlmread("../data/airborne_lidar2.xyz");
-    [H, XMovT] = simpleicp(XFix, XMov);
-end
+% Knn search takes to much time for this dataset ...
+% if strcmp(dataset, "Airborne Lidar") || strcmp(dataset, "all")
+%     disp('Processing dataset "Airborne Lidar"')
+%     XFix = dlmread("../data/airborne_lidar1.xyz");
+%     XMov = dlmread("../data/airborne_lidar2.xyz");
+%     [H, XMovT] = simpleicp(XFix, XMov);
+% end
 
-if strcmp(dataset, "Terrestrial Lidar") || strcmp(dataset, "all")
-    disp('Processing dataset "Terrestrial Lidar"')
-    XFix = dlmread("../data/terrestrial_lidar1.xyz");
-    XMov = dlmread("../data/terrestrial_lidar2.xyz");
-    [H, XMovT] = simpleicp(XFix, XMov);
-end
+% Knn search takes to much time for this dataset ...
+% if strcmp(dataset, "Terrestrial Lidar") || strcmp(dataset, "all")
+%     disp('Processing dataset "Terrestrial Lidar"')
+%     XFix = dlmread("../data/terrestrial_lidar1.xyz");
+%     XMov = dlmread("../data/terrestrial_lidar2.xyz");
+%     [H, XMovT] = simpleicp(XFix, XMov);
+% end
 
 if strcmp(dataset, "Bunny") || strcmp(dataset, "all")
     disp('Processing dataset "Bunny"')
     XFix = dlmread("../data/bunny_part1.xyz");
     XMov = dlmread("../data/bunny_part2.xyz");
-    [H, XMovT] = simpleicp(XFix, XMov, 'maxOverlapDistance', 0.01);
+    [H, XMovT] = simpleicp(XFix, XMov, 'maxOverlapDistance', 1);
 end
 
 if exportResults

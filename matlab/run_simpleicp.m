@@ -28,7 +28,7 @@ if strcmp(dataset, "Bunny") || strcmp(dataset, "all")
     disp('Processing dataset "Bunny"')
     XFix = dlmread("../data/bunny_part1.xyz");
     XMov = dlmread("../data/bunny_part2.xyz");
-    [H, XMovT] = simpleicp(XFix, XMov, 'maxOverlapDistance', 0.01);
+    [H, XMovT] = simpleicp(XFix, XMov, 'maxOverlapDistance', 1);
 end
 
 if strcmp(dataset, "Multisensor") || strcmp(dataset, "all")

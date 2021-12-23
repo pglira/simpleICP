@@ -33,7 +33,7 @@ if cmp(dataset, "Bunny") == 0 || cmp(dataset, "all") == 0
     println("Processing dataset \"Bunny\"")
     X_fix = readdlm("../data/bunny_part1.xyz")
     X_mov = readdlm("../data/bunny_part2.xyz")
-    H, X_mov_transformed = simpleicp(X_fix, X_mov, max_overlap_distance=0.01)
+    H, X_mov_transformed = simpleicp(X_fix, X_mov, max_overlap_distance=1)
 end
 
 # Export original and adjusted point clouds to xyz files to check the result

@@ -36,7 +36,7 @@ if dataset == "Bunny" or dataset == "all":
     print('Processing dataset "Bunny"')
     X_fix = np.genfromtxt(tests_dirpath.joinpath(Path("../../../data/bunny_part1.xyz")))
     X_mov = np.genfromtxt(tests_dirpath.joinpath(Path("../../../data/bunny_part2.xyz")))
-    H, X_mov_transformed = simpleicp.simpleicp(X_fix, X_mov, max_overlap_distance=0.01)
+    H, X_mov_transformed = simpleicp.simpleicp(X_fix, X_mov, max_overlap_distance=1)
 
 if dataset == "Multisensor" or dataset == "all":
     print('Processing dataset "Multisensor"')
