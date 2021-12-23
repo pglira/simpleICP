@@ -15,12 +15,12 @@ function [H, XmovT] = simpleicp(XFix, XMov, nva)
     end
 
     tic;
-    log('Create point cloud objects ...');
+    fprintf('Create point cloud objects ...\n');
     pcFix = pointcloud(XFix(:,1), XFix(:,2), XFix(:,3));
     pcMov = pointcloud(XMov(:,1), XMov(:,2), XMov(:,3));
 
     if ~isinf(nva.maxOverlapDistance)
-        log('Consider partial overlap of point clouds ...');
+        fprintf('Consider partial overlap of point clouds ...\n');
         pcFix.selectInRange([pcMov.x pcMov.y pcMov.z], nva.maxOverlapDistance);
         if numel(pcFix.sel) == 0
             error(['Point clouds do not overlap within maxOverlapDistance = %.5f! ' ...
@@ -29,16 +29,16 @@ function [H, XmovT] = simpleicp(XFix, XMov, nva)
         end
     end
 
-    log('Select points for correspondences within overlap area of fixed point cloud ...');
+    fprintf('Select points for correspondences within overlap area of fixed point cloud ...\n');
     pcFix.selectNPoints(nva.correspondences);
     selOrig = pcFix.sel;
 
-    log('Estimate normals of selected points ...');
+    fprintf('Estimate normals of selected points ...\n');
     pcFix.estimateNormals(nva.neighbors);
 
     H = eye(4);
 
-    log('Start iterations ...');
+    fprintf('Start iterations ...\n');
     for i = 1:nva.maxIterations
 
         initialDistances = matching(pcFix, pcMov);
@@ -57,38 +57,30 @@ function [H, XmovT] = simpleicp(XFix, XMov, nva)
 
         if i > 1
             if checkConvergenceCriteria(residualDistances{i}, residualDistances{i-1}, nva.minChange)
-                log('Convergence criteria fulfilled -> stop iteration!');
+                fprintf('Convergence criteria fulfilled -> stop iteration!\n');
                 break;
             end
         end
 
         if i == 1
-            log(sprintf('%9s | %15s | %15s | %15s', 'Iteration', 'correspondences', ...
-                'mean(residuals)', 'std(residuals)'));
-            log(sprintf('%9d | %15d | %15.4f | %15.4f', 0, numel(initialDistances), ...
-                mean(initialDistances), std(initialDistances)));
+            fprintf('%9s | %15s | %15s | %15s', 'Iteration', 'correspondences', ...
+                'mean(residuals)', 'std(residuals)\n');
+            fprintf('%9d | %15d | %15.4f | %15.4f\n', 0, numel(initialDistances), ...
+                mean(initialDistances), std(initialDistances));
         end
-        log(sprintf('%9d | %15d | %15.4f | %15.4f', i, ...
-            numel(residualDistances{i}), mean(residualDistances{i}), std(residualDistances{i})));
+        fprintf('%9d | %15d | %15.4f | %15.4f\n', i, ...
+            numel(residualDistances{i}), mean(residualDistances{i}), std(residualDistances{i}));
 
     end
 
     XmovT = [pcMov.x pcMov.y pcMov.z];
 
-    log('Estimated transformation matrix H:');
-    log(sprintf('[%12.6f %12.6f %12.6f %12.6f]', H(1,1:4)));
-    log(sprintf('[%12.6f %12.6f %12.6f %12.6f]', H(2,1:4)));
-    log(sprintf('[%12.6f %12.6f %12.6f %12.6f]', H(3,1:4)));
-    log(sprintf('[%12.6f %12.6f %12.6f %12.6f]', H(4,1:4)));
-    log(sprintf('Finished in %.3f seconds!', toc));
-
-end
-
-
-function log(text)
-
-    logtime = datestr(now, 'HH:MM:SS.FFF');
-    fprintf('[%s] %s\n', logtime, text)
+    fprintf('Estimated transformation matrix H:\n');
+    fprintf('[%12.6f %12.6f %12.6f %12.6f]\n', H(1,1:4));
+    fprintf('[%12.6f %12.6f %12.6f %12.6f]\n', H(2,1:4));
+    fprintf('[%12.6f %12.6f %12.6f %12.6f]\n', H(3,1:4));
+    fprintf('[%12.6f %12.6f %12.6f %12.6f]\n', H(4,1:4));
+    fprintf('Finished in %.3f seconds!\n', toc);
 
 end
 
