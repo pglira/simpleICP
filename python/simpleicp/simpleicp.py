@@ -3,12 +3,50 @@ Implementation of a rather simple version of the Iterative Closest Point (ICP) a
 """
 
 import time
+from dataclasses import dataclass
 from typing import Tuple
 
 import numpy as np
 from scipy import spatial, stats
 
 from .pointcloud import PointCloud
+
+
+@dataclass
+class Parameter:
+    const: bool = False
+    value: float = np.nan
+    optim_idx: int = -1
+
+
+class RigidBodyParameters:
+    def __init__(self) -> None:
+        self.alpha1 = Parameter()
+        self.alpha2 = Parameter()
+        self.alpha3 = Parameter()
+        self.tx = Parameter()
+        self.ty = Parameter()
+        self.tz = Parameter()
+
+    def set_optim_idx(self):
+        optim_idx = 0
+        if not self.alpha1.const:
+            self.alpha1.optim_idx = optim_idx
+            optim_idx += 1
+        if not self.alpha2.const:
+            self.alpha2.optim_idx = optim_idx
+            optim_idx += 1
+        if not self.alpha3.const:
+            self.alpha3.optim_idx = optim_idx
+            optim_idx += 1
+        if not self.tx.const:
+            self.tx.optim_idx = optim_idx
+            optim_idx += 1
+        if not self.ty.const:
+            self.ty.optim_idx = optim_idx
+            optim_idx += 1
+        if not self.tz.const:
+            self.tz.optim_idx = optim_idx
 
 
 def matching(pcfix: PointCloud, pcmov: PointCloud) -> np.array:
@@ -70,6 +108,24 @@ def estimate_rigid_body_transformation(
 ) -> Tuple[np.array, np.array]:
     """Estimate rigid body transformation for a given set of correspondences."""
 
+    rbp = RigidBodyParameters()
+
+    rbp.alpha1.value = tf_obs[0]
+    rbp.alpha2.value = tf_obs[1]
+    rbp.alpha3.value = tf_obs[2]
+    rbp.tx.value = tf_obs[3]
+    rbp.ty.value = tf_obs[4]
+    rbp.tz.value = tf_obs[5]
+
+    rbp.alpha1.const = np.isinf(weights_tf_obs_residuals[0])
+    rbp.alpha2.const = np.isinf(weights_tf_obs_residuals[1])
+    rbp.alpha3.const = np.isinf(weights_tf_obs_residuals[2])
+    rbp.tx.const = np.isinf(weights_tf_obs_residuals[3])
+    rbp.ty.const = np.isinf(weights_tf_obs_residuals[4])
+    rbp.tz.const = np.isinf(weights_tf_obs_residuals[5])
+
+    rbp.set_optim_idx()
+
     (
         A_correspondences,
         p_correspondences,
@@ -107,17 +163,48 @@ def estimate_rigid_body_transformation(
     Aw = A * np.sqrt(p[:, np.newaxis])
     lw = l * np.sqrt(p)
 
+    # Do not estimate parameters with weight == infinity as they are considered to be constant
+    if any(weights_tf_obs_residuals):
+        keep = np.isfinite(weights_tf_obs_residuals)
+        Aw = Aw[:, keep]
+
     x, _, _, _ = np.linalg.lstsq(Aw, lw, rcond=None)
 
-    residuals = A @ x - l
+    if not rbp.alpha1.const:
+        rbp.alpha1.value = x[rbp.alpha1.optim_idx]
+    if not rbp.alpha2.const:
+        rbp.alpha2.value = x[rbp.alpha2.optim_idx]
+    if not rbp.alpha3.const:
+        rbp.alpha3.value = x[rbp.alpha3.optim_idx]
+    if not rbp.tx.const:
+        rbp.tx.value = x[rbp.tx.optim_idx]
+    if not rbp.ty.const:
+        rbp.ty.value = x[rbp.ty.optim_idx]
+    if not rbp.tz.const:
+        rbp.tz.value = x[rbp.tz.optim_idx]
 
-    R = euler_angles_to_linearized_rotation_matrix(x[0], x[1], x[2])
+    R = euler_angles_to_linearized_rotation_matrix(
+        rbp.alpha1.value, rbp.alpha2.value, rbp.alpha3.value
+    )
 
-    t = x[3:6]
+    t = np.array([rbp.tx.value, rbp.ty.value, rbp.tz.value])
 
     H = create_homogeneous_transformation_matrix(R, t)
 
-    return H, residuals
+    x_rbp = np.array(
+        [
+            rbp.alpha1.value,
+            rbp.alpha2.value,
+            rbp.alpha3.value,
+            rbp.tx.value,
+            rbp.ty.value,
+            rbp.tz.value,
+        ]
+    )
+
+    distances = A @ x_rbp - l
+
+    return H, distances
 
 
 def get_Apl_from_correspondences(
@@ -165,7 +252,10 @@ def get_Apl_from_tf_obs(
 
     l = np.array(tf_obs)
 
-    keep = [True if w > 0 else False for w in weights_tf_obs_residuals]
+    # Keep observation only if > 0 and not infinity (parameter is constant)
+    keep = np.greater(weights_tf_obs_residuals, 0) & np.isfinite(
+        weights_tf_obs_residuals
+    )
 
     A = A[keep, :]
     p = p[keep]
@@ -229,9 +319,12 @@ def simpleicp(
     """Implementation of a rather simple version of the Iterative Closest Point (ICP) algorithm."""
 
     assert weights_distance_residuals > 0, "Weights must be > 0!"
-    assert len(tf_obs) == 6, "List must have exactly 6 elements!"
-    assert len(weights_tf_obs_residuals) == 6, "List must have exactly 6 elements!"
+    assert len(tf_obs) == 6, "Tuple must have exactly 6 elements!"
+    assert len(weights_tf_obs_residuals) == 6, "Tuple must have exactly 6 elements!"
     assert all([w >= 0 for w in weights_tf_obs_residuals]), "Weights must be >= 0!"
+    assert any(
+        np.isfinite(weights_tf_obs_residuals)
+    ), "At least one weight must be finite!"
 
     start_time = time.time()
     print("Create point cloud objects ...")
@@ -266,7 +359,6 @@ def simpleicp(
         initial_distances = reject(pcfix, pcmov, min_planarity, initial_distances)
 
         # Estimate weight of distances if value is < 0
-        # weight = 1/(sig^2), where sig = mad(l)
         if weights_distance_residuals < 0:
             weights_distance_residuals = 1 / (
                 stats.median_absolute_deviation(initial_distances) ** 2
