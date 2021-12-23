@@ -18,8 +18,6 @@ Eigen::Matrix<double, 4, 4> SimpleICP(const Eigen::MatrixXd &X_fix,
                                       const double &min_change = 1,
                                       const int &max_iterations = 100);
 
-const char *Timestamp();
-
 Eigen::MatrixXi KnnSearch(const Eigen::MatrixXd &X,
                           const Eigen::MatrixXd &X_query,
                           const int &k = 1);

@@ -6,7 +6,8 @@
         {
             "label": "run_simpleicp.sh",
             "type": "shell",
-            "command": "./run_simpleicp.sh"
+            "command": "./run_simpleicp.sh",
+            "problemMatcher": []
         }
     ]
 }

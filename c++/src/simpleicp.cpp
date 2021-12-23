@@ -16,13 +16,13 @@ Eigen::Matrix<double, 4, 4> SimpleICP(const Eigen::MatrixXd &X_fix,
 {
   auto start = std::chrono::system_clock::now();
 
-  printf("[%s] Create point cloud objects ...\n", Timestamp());
+  printf("Create point cloud objects ...\n");
   PointCloud pc_fix{X_fix};
   PointCloud pc_mov{X_mov};
 
   if (max_overlap_distance > 0)
   {
-    printf("[%s] Consider partial overlap of point clouds ...\n", Timestamp());
+    printf("Consider partial overlap of point clouds ...\n");
     pc_fix.SelectInRange(pc_mov.X(), max_overlap_distance);
     if (pc_fix.GetIdxOfSelectedPts().size() == 0)
     {
@@ -36,11 +36,10 @@ Eigen::Matrix<double, 4, 4> SimpleICP(const Eigen::MatrixXd &X_fix,
     }
   }
 
-  printf("[%s] Select points for correspondences within overlap area of fixed point cloud ...\n",
-         Timestamp());
+  printf("Select points for correspondences within overlap area of fixed point cloud ...\n");
   pc_fix.SelectNPts(correspondences);
 
-  printf("[%s] Estimate normals of selected points ...\n", Timestamp());
+  printf("Estimate normals of selected points ...\n");
   pc_fix.EstimateNormals(neighbors);
 
   // Initialization
@@ -51,7 +50,7 @@ Eigen::Matrix<double, 4, 4> SimpleICP(const Eigen::MatrixXd &X_fix,
   std::vector<double> residual_dists_mean;
   std::vector<double> residual_dists_std;
 
-  printf("[%s] Start iterations ...\n", Timestamp());
+  printf("Start iterations ...\n");
   for (int i = 0; i < max_iterations; i++)
   {
     CorrPts cp = CorrPts(pc_fix, pc_mov);
@@ -74,55 +73,48 @@ Eigen::Matrix<double, 4, 4> SimpleICP(const Eigen::MatrixXd &X_fix,
     {
       if (CheckConvergenceCriteria(residual_dists_mean, residual_dists_std, min_change))
       {
-        printf("[%s] Convergence criteria fulfilled -> stop iteration!\n", Timestamp());
+        printf("Convergence criteria fulfilled -> stop iteration!\n");
         break;
       }
     }
 
     if (i == 0)
     {
-      printf("[%s] %9s | %15s | %15s | %15s\n",
-             Timestamp(),
+      printf("%9s | %15s | %15s | %15s\n",
              "Iteration",
              "correspondences",
              "mean(residuals)",
              "std(residuals)");
-      printf("[%s] %9d | %15d | %15.4f | %15.4f\n",
-             Timestamp(),
+      printf("%9d | %15d | %15.4f | %15.4f\n",
              i,
              int(initial_dists.size()),
              initial_dists.mean(),
              Std(initial_dists));
     }
-    printf("[%s] %9d | %15d | %15.4f | %15.4f\n",
-           Timestamp(),
+    printf("%9d | %15d | %15.4f | %15.4f\n",
            i + 1,
            int(residual_dists.size()),
            residual_dists_mean.back(),
            residual_dists_std.back());
   }
 
-  printf("[%s] Estimated transformation matrix H:\n", Timestamp());
-  printf("[%s] [%12.6f %12.6f %12.6f %12.6f]\n",
-         Timestamp(),
+  printf("Estimated transformation matrix H:\n");
+  printf("[%12.6f %12.6f %12.6f %12.6f]\n",
          H_new(0, 0),
          H_new(0, 1),
          H_new(0, 2),
          H_new(0, 3));
-  printf("[%s] [%12.6f %12.6f %12.6f %12.6f]\n",
-         Timestamp(),
+  printf("[%12.6f %12.6f %12.6f %12.6f]\n",
          H_new(1, 0),
          H_new(1, 1),
          H_new(1, 2),
          H_new(1, 3));
-  printf("[%s] [%12.6f %12.6f %12.6f %12.6f]\n",
-         Timestamp(),
+  printf("[%12.6f %12.6f %12.6f %12.6f]\n",
          H_new(2, 0),
          H_new(2, 1),
          H_new(2, 2),
          H_new(2, 3));
-  printf("[%s] [%12.6f %12.6f %12.6f %12.6f]\n",
-         Timestamp(),
+  printf("[%12.6f %12.6f %12.6f %12.6f]\n",
          H_new(3, 0),
          H_new(3, 1),
          H_new(3, 2),
@@ -130,34 +122,9 @@ Eigen::Matrix<double, 4, 4> SimpleICP(const Eigen::MatrixXd &X_fix,
 
   auto end = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = end - start;
-  printf("[%s] Finished in %.3f seconds!\n", Timestamp(), elapsed_seconds.count());
+  printf("Finished in %.3f seconds!\n", elapsed_seconds.count());
 
   return H_new;
-}
-
-// https://stackoverflow.com/a/35157784
-const char *Timestamp()
-{
-  using namespace std::chrono;
-
-  auto now = system_clock::now(); // current time
-
-  // Get number of milliseconds for the current second
-  // (remainder after division into seconds)
-  auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
-
-  // Convert to std::time_t in order to convert to std::tm (broken time)
-  auto timer = system_clock::to_time_t(now);
-
-  // convert to broken time
-  std::tm bt = *std::localtime(&timer);
-
-  std::ostringstream oss;
-
-  oss << std::put_time(&bt, "%H:%M:%S");
-  oss << '.' << std::setfill('0') << std::setw(3) << ms.count();
-
-  return oss.str().c_str();
 }
 
 Eigen::MatrixXi KnnSearch(const Eigen::MatrixXd &X, const Eigen::MatrixXd &X_query, const int &k)
