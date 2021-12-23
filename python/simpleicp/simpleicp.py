@@ -3,19 +3,12 @@ Implementation of a rather simple version of the Iterative Closest Point (ICP) a
 """
 
 import time
-from datetime import datetime
 from typing import Tuple
 
 import numpy as np
 from scipy import spatial, stats
 
 from .pointcloud import PointCloud
-
-
-def log(text: str):
-    """Print text with time stamp."""
-    logtime = datetime.now().strftime("%H:%M:%S.%f")[:-3]
-    print(f"[{logtime}] {text}")
 
 
 def matching(pcfix: PointCloud, pcmov: PointCloud) -> np.array:
@@ -157,26 +150,26 @@ def simpleicp(
     pcmov = PointCloud(X_mov[:, 0], X_mov[:, 1], X_mov[:, 2])
 
     if np.isfinite(max_overlap_distance):
-        log("Consider partial overlap of point clouds ...")
+        print("Consider partial overlap of point clouds ...")
         pcfix.select_in_range(pcmov.X, max_range=max_overlap_distance)
         assert pcfix.no_selected_points > 0, (
             "Point clouds do not overlap within max_overlap_distance = ",
             f"{max_overlap_distance:.5f}! Consider increasing the value of max_overlap_distance.",
         )
 
-    log(
+    print(
         "Select points for correspondences within overlap area of fixed point cloud ..."
     )
     pcfix.select_n_points(correspondences)
     sel_orig = pcfix.sel
 
-    log("Estimate normals of selected points ...")
+    print("Estimate normals of selected points ...")
     pcfix.estimate_normals(neighbors)
 
     H = np.eye(4)
     residual_distances = []
 
-    log("Start iterations ...")
+    print("Start iterations ...")
     for i in range(0, max_iterations):
 
         initial_distances = matching(pcfix, pcmov)
@@ -206,34 +199,34 @@ def simpleicp(
             if check_convergence_criteria(
                 residual_distances[i], residual_distances[i - 1], min_change
             ):
-                log("Convergence criteria fulfilled -> stop iteration!")
+                print("Convergence criteria fulfilled -> stop iteration!")
                 break
 
         if i == 0:
-            log(
+            print(
                 f"{'Iteration':9s} | "
                 f"{'correspondences':15s} | "
                 f"{'mean(residuals)':15s} | "
-                f"{'std(residuals)':15s}"
+                f"{'std(residuals)':>15s}"
             )
-            log(
+            print(
                 f"{0:9d} | "
                 f"{len(initial_distances):15d} | "
                 f"{np.mean(initial_distances):15.4f} | "
                 f"{np.std(initial_distances):15.4f}"
             )
-        log(
+        print(
             f"{i+1:9d} | "
             f"{len(residual_distances[i]):15d} | "
             f"{np.mean(residual_distances[i]):15.4f} | "
             f"{np.std(residual_distances[i]):15.4f}"
         )
 
-    log("Estimated transformation matrix H:")
-    log(f"[{H[0, 0]:12.6f} {H[0, 1]:12.6f} {H[0, 2]:12.6f} {H[0, 3]:12.6f}]")
-    log(f"[{H[1, 0]:12.6f} {H[1, 1]:12.6f} {H[1, 2]:12.6f} {H[1, 3]:12.6f}]")
-    log(f"[{H[2, 0]:12.6f} {H[2, 1]:12.6f} {H[2, 2]:12.6f} {H[2, 3]:12.6f}]")
-    log(f"[{H[3, 0]:12.6f} {H[3, 1]:12.6f} {H[3, 2]:12.6f} {H[3, 3]:12.6f}]")
-    log(f"Finished in {time.time() - start_time:.3f} seconds!")
+    print("Estimated transformation matrix H:")
+    print(f"[{H[0, 0]:12.6f} {H[0, 1]:12.6f} {H[0, 2]:12.6f} {H[0, 3]:12.6f}]")
+    print(f"[{H[1, 0]:12.6f} {H[1, 1]:12.6f} {H[1, 2]:12.6f} {H[1, 3]:12.6f}]")
+    print(f"[{H[2, 0]:12.6f} {H[2, 1]:12.6f} {H[2, 2]:12.6f} {H[2, 3]:12.6f}]")
+    print(f"[{H[3, 0]:12.6f} {H[3, 1]:12.6f} {H[3, 2]:12.6f} {H[3, 3]:12.6f}]")
+    print(f"Finished in {time.time() - start_time:.3f} seconds!")
 
     return H, pcmov.X
