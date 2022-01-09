@@ -21,7 +21,7 @@ if [[ "${dataset}" == "Airborne Lidar" || "${dataset}" == "all" ]]; then
 fi
 
 if [[ "${dataset}" == "Terrestrial Lidar" || "${dataset}" == "all" ]]; then
-    echo "Processing dataset \"Airborne Lidar\""
+    echo "Processing dataset \"Terrestrial Lidar\""
     ${simpleicp} \
     --fixed ../data/terrestrial_lidar1.xyz \
     --movable ../data/terrestrial_lidar2.xyz
