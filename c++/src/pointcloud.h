@@ -15,13 +15,13 @@ public:
 
   void SelectInRange(const Eigen::MatrixX3d &X, const double &max_range);
 
-  void SelectNPts(const int &n);
+  void SelectNPts(const uint &n);
 
   void EstimateNormals(const int &neighbors);
 
   void Transform(Eigen::Matrix<double, 4, 4> &H);
 
-  int NoPts();
+  long NoPts();
 
   // Getters
   const Eigen::MatrixXd &X();

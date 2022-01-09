@@ -136,7 +136,7 @@ Eigen::MatrixXi KnnSearch(const Eigen::MatrixXd &X, const Eigen::MatrixXd &X_que
 
   // Iterate over all query points
   Eigen::MatrixXi mat_idx_nn(X_query.rows(), k);
-  for (size_t i = 0; i < X_query.rows(); i++)
+  for (int i = 0; i < X_query.rows(); i++)
   {
     // Query point
     std::vector<double> qp{X_query(i, 0), X_query(i, 1), X_query(i, 2)};

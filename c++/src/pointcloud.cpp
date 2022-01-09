@@ -7,7 +7,7 @@ Eigen::MatrixXd PointCloud::GetXOfSelectedPts()
 {
   auto sel_idx = GetIdxOfSelectedPts();
   Eigen::MatrixXd X_sel(sel_idx.size(), 3);
-  for (int i = 0; i < sel_idx.size(); i++)
+  for (uint i = 0; i < sel_idx.size(); i++)
   {
     X_sel(i, 0) = X_(sel_idx[i], 0);
     X_sel(i, 1) = X_(sel_idx[i], 1);
@@ -19,7 +19,7 @@ Eigen::MatrixXd PointCloud::GetXOfSelectedPts()
 std::vector<int> PointCloud::GetIdxOfSelectedPts()
 {
   std::vector<int> idx;
-  for (int i = 0; i < NoPts(); i++)
+  for (uint i = 0; i < NoPts(); i++)
   {
     if (sel_[i])
     {
@@ -42,7 +42,7 @@ void PointCloud::SelectInRange(const Eigen::MatrixX3d &X, const double &max_rang
   Eigen::VectorXd dists(no_selected_points);
   dists.fill(NAN);
 
-  for (int i = 0; i < no_selected_points; i++)
+  for (uint i = 0; i < no_selected_points; i++)
   {
     double x_query{X_query(i, 0)};
     double y_query{X_query(i, 1)};
@@ -62,7 +62,7 @@ void PointCloud::SelectInRange(const Eigen::MatrixX3d &X, const double &max_rang
   }
 
   // Deselect points which exceed maximum range
-  for (int i = 0; i < no_selected_points; i++)
+  for (uint i = 0; i < no_selected_points; i++)
   {
     if (dists(i) > max_range)
     {
@@ -72,23 +72,23 @@ void PointCloud::SelectInRange(const Eigen::MatrixX3d &X, const double &max_rang
 
 }
 
-void PointCloud::SelectNPts(const int &n)
+void PointCloud::SelectNPts(const uint &n)
 {
   auto sel_idx{GetIdxOfSelectedPts()};
 
   if (n < sel_idx.size())
   {
     // Deactivate all points first
-    for (int i = 1; i < NoPts(); i++)
+    for (long i = 1; i < NoPts(); i++)
     {
       sel_[i] = false;
     }
 
     // Re-activate n points
-    auto idx_not_rounded{Eigen::VectorXd::LinSpaced(n, 0, sel_idx.size() - 1)};
-    for (int i = 0; i < n; i++)
+    auto idx_not_rounded{Eigen::VectorXd::LinSpaced(n, 0, static_cast<uint>(sel_idx.size()) - 1)};
+    for (uint i = 0; i < n; i++)
     {
-      int idx_rounded{static_cast<int>(round(idx_not_rounded(i)))};
+      uint idx_rounded{static_cast<uint>(round(idx_not_rounded(i)))};
       sel_[sel_idx[idx_rounded]] = true;
     }
   }
@@ -110,7 +110,7 @@ void PointCloud::EstimateNormals(const int &neighbors)
   mat_idx_nn = KnnSearch(X_, GetXOfSelectedPts(), neighbors);
 
   auto sel_idx = GetIdxOfSelectedPts();
-  for (int i = 0; i < sel_idx.size(); i++)
+  for (uint i = 0; i < sel_idx.size(); i++)
   {
     // Build matrix with nn
     Eigen::MatrixXd X_nn(neighbors, 3);
@@ -147,7 +147,7 @@ void PointCloud::Transform(Eigen::Matrix<double, 4, 4> &H)
   X_ << X_out_H.row(0).transpose(), X_out_H.row(1).transpose(), X_out_H.row(2).transpose();
 }
 
-int PointCloud::NoPts() { return X_.rows(); }
+long PointCloud::NoPts() { return X_.rows(); }
 
 // Getters
 const Eigen::MatrixXd &PointCloud::X() { return X_; }

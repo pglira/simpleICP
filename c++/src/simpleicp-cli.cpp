@@ -90,7 +90,7 @@ Eigen::MatrixXd ImportXYZFileToMatrix(const std::string &path_to_pc)
     }
 
     // Check if each line contains exactly 3 values
-    for (int i = 0; i < parsedData.size(); i++)
+    for (uint i = 0; i < parsedData.size(); i++)
     {
       if (parsedData[i].size() != 3)
       {
@@ -101,9 +101,9 @@ Eigen::MatrixXd ImportXYZFileToMatrix(const std::string &path_to_pc)
 
     // Create eigen array
     Eigen::MatrixXd X(parsedData.size(), 3);
-    for (int i = 0; i < parsedData.size(); i++)
+    for (uint i = 0; i < parsedData.size(); i++)
     {
-      for (int j = 0; j < parsedData[i].size(); j++)
+      for (uint j = 0; j < parsedData[i].size(); j++)
       {
         try
         {
