@@ -21,5 +21,5 @@ setup(
         "Programming Language :: Python :: 3.9",
     ],
     packages=find_packages(exclude=("tests",)),
-    install_requires=["numpy", "scipy"],
+    install_requires=["numpy", "scipy", "lmfit"],
 )

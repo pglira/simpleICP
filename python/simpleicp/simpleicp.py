@@ -6,61 +6,49 @@ import time
 from dataclasses import dataclass
 from typing import Tuple
 
+import lmfit
 import numpy as np
+from lmfit.parameter import Parameters
 from scipy import spatial, stats
 
+from . import utils
 from .pointcloud import PointCloud
 
 
 @dataclass
 class Parameter:
-    const: bool = False
-    value: float = np.nan
-    optim_idx: int = -1
+    """Data class for a single optimization parameter."""
+
+    estimated_value: float = np.nan
+    estimated_uncertainty: float = np.nan
+    observed_value: float = np.nan
+    observation_weight: float = np.nan
+    scale_for_report: float = 1
 
 
+@dataclass
 class RigidBodyParameters:
-    def __init__(self) -> None:
-        self.alpha1 = Parameter()
-        self.alpha2 = Parameter()
-        self.alpha3 = Parameter()
-        self.tx = Parameter()
-        self.ty = Parameter()
-        self.tz = Parameter()
 
-    def set_optim_idx(self):
-        optim_idx = 0
-        if not self.alpha1.const:
-            self.alpha1.optim_idx = optim_idx
-            optim_idx += 1
-        if not self.alpha2.const:
-            self.alpha2.optim_idx = optim_idx
-            optim_idx += 1
-        if not self.alpha3.const:
-            self.alpha3.optim_idx = optim_idx
-            optim_idx += 1
-        if not self.tx.const:
-            self.tx.optim_idx = optim_idx
-            optim_idx += 1
-        if not self.ty.const:
-            self.ty.optim_idx = optim_idx
-            optim_idx += 1
-        if not self.tz.const:
-            self.tz.optim_idx = optim_idx
+    alpha1: Parameter = Parameter()
+    alpha2: Parameter = Parameter()
+    alpha3: Parameter = Parameter()
+    tx: Parameter = Parameter()
+    ty: Parameter = Parameter()
+    tz: Parameter = Parameter()
 
 
 def matching(pcfix: PointCloud, pcmov: PointCloud) -> np.array:
     """Matching of point clouds."""
     kdtree = spatial.cKDTree(pcmov.X)
-    _, pcmov.sel = kdtree.query(pcfix.X_sel, k=1, p=2, n_jobs=-1)
+    _, pcmov.sel = kdtree.query(pcfix.X[pcfix.sel, :], k=1, p=2, n_jobs=-1)
 
-    dx = pcmov.x_sel - pcfix.x_sel
-    dy = pcmov.y_sel - pcfix.y_sel
-    dz = pcmov.z_sel - pcfix.z_sel
+    dx = pcmov.X[pcmov.sel, 0] - pcfix.X[pcfix.sel, 0]
+    dy = pcmov.X[pcmov.sel, 1] - pcfix.X[pcfix.sel, 1]
+    dz = pcmov.X[pcmov.sel, 2] - pcfix.X[pcfix.sel, 2]
 
-    nx = pcfix.nx[pcfix.sel]
-    ny = pcfix.ny[pcfix.sel]
-    nz = pcfix.nz[pcfix.sel]
+    nx = pcfix.N[pcfix.sel, 0]
+    ny = pcfix.N[pcfix.sel, 1]
+    nz = pcfix.N[pcfix.sel, 2]
 
     no_correspondences = pcfix.no_selected_points
     distances = np.empty(no_correspondences)
@@ -92,122 +80,68 @@ def reject(
     return distances
 
 
-def estimate_rigid_body_transformation(
-    x_fix: np.array,
-    y_fix: np.array,
-    z_fix: np.array,
-    nx_fix: np.array,
-    ny_fix: np.array,
-    nz_fix: np.array,
-    x_mov: np.array,
-    y_mov: np.array,
-    z_mov: np.array,
+def compute_residuals(
+    parameter: lmfit.Parameters,
+    X_fix: np.array,
+    N_fix: np.array,
+    X_mov: np.array,
     weights_distance_residuals: float,
     tf_obs: Tuple[float],
     weights_tf_obs_residuals: Tuple[float],
-) -> Tuple[np.array, np.array]:
-    """Estimate rigid body transformation for a given set of correspondences."""
-
-    rbp = RigidBodyParameters()
-
-    rbp.alpha1.value = tf_obs[0]
-    rbp.alpha2.value = tf_obs[1]
-    rbp.alpha3.value = tf_obs[2]
-    rbp.tx.value = tf_obs[3]
-    rbp.ty.value = tf_obs[4]
-    rbp.tz.value = tf_obs[5]
-
-    rbp.alpha1.const = np.isinf(weights_tf_obs_residuals[0])
-    rbp.alpha2.const = np.isinf(weights_tf_obs_residuals[1])
-    rbp.alpha3.const = np.isinf(weights_tf_obs_residuals[2])
-    rbp.tx.const = np.isinf(weights_tf_obs_residuals[3])
-    rbp.ty.const = np.isinf(weights_tf_obs_residuals[4])
-    rbp.tz.const = np.isinf(weights_tf_obs_residuals[5])
-
-    rbp.set_optim_idx()
+) -> np.array:
+    """Compute residuals of optimization problem."""
 
     (
-        A_correspondences,
-        p_correspondences,
-        l_correspondences,
-    ) = get_Apl_from_correspondences(
+        x_mov_transformed,
+        y_mov_transformed,
+        z_mov_transformed,
+    ) = transform_point_cloud(parameter, X_mov)
+
+    weighted_distance_residuals = compute_weighted_distance_residuals(
         x_fix,
         y_fix,
         z_fix,
         nx_fix,
         ny_fix,
         nz_fix,
-        x_mov,
-        y_mov,
-        z_mov,
+        x_mov_transformed,
+        y_mov_transformed,
+        z_mov_transformed,
         weights_distance_residuals,
     )
 
-    if any(weights_tf_obs_residuals):
-
-        A_tf_obs, p_tf_obs, l_tf_obs = get_Apl_from_tf_obs(
-            tf_obs, weights_tf_obs_residuals
-        )
-
-        A = np.vstack((A_correspondences, A_tf_obs))
-        p = np.concatenate((p_correspondences, p_tf_obs))
-        l = np.concatenate((l_correspondences, l_tf_obs))
-
-    else:
-
-        A = A_correspondences
-        p = p_correspondences
-        l = l_correspondences
-
-    # Create a "weighted" version of A and l as the solver below does not support weights as input
-    Aw = A * np.sqrt(p[:, np.newaxis])
-    lw = l * np.sqrt(p)
-
-    # Do not estimate parameters with weight == infinity as they are considered to be constant
-    if any(weights_tf_obs_residuals):
-        keep = np.isfinite(weights_tf_obs_residuals)
-        Aw = Aw[:, keep]
-
-    x, _, _, _ = np.linalg.lstsq(Aw, lw, rcond=None)
-
-    if not rbp.alpha1.const:
-        rbp.alpha1.value = x[rbp.alpha1.optim_idx]
-    if not rbp.alpha2.const:
-        rbp.alpha2.value = x[rbp.alpha2.optim_idx]
-    if not rbp.alpha3.const:
-        rbp.alpha3.value = x[rbp.alpha3.optim_idx]
-    if not rbp.tx.const:
-        rbp.tx.value = x[rbp.tx.optim_idx]
-    if not rbp.ty.const:
-        rbp.ty.value = x[rbp.ty.optim_idx]
-    if not rbp.tz.const:
-        rbp.tz.value = x[rbp.tz.optim_idx]
-
-    R = euler_angles_to_linearized_rotation_matrix(
-        rbp.alpha1.value, rbp.alpha2.value, rbp.alpha3.value
+    weighted_tf_obs_residuals = compute_weighted_tf_obs_residuals(
+        parameter, tf_obs, weights_tf_obs_residuals
     )
 
-    t = np.array([rbp.tx.value, rbp.ty.value, rbp.tz.value])
-
-    H = create_homogeneous_transformation_matrix(R, t)
-
-    x_rbp = np.array(
-        [
-            rbp.alpha1.value,
-            rbp.alpha2.value,
-            rbp.alpha3.value,
-            rbp.tx.value,
-            rbp.ty.value,
-            rbp.tz.value,
-        ]
+    # Combine all residuals
+    weighted_residuals = np.concatenate(
+        (weighted_distance_residuals, weighted_tf_obs_residuals)
     )
 
-    distances = A @ x_rbp - l
-
-    return H, distances
+    return weighted_residuals
 
 
-def get_Apl_from_correspondences(
+def transform_point_cloud(
+    parameter: lmfit.Parameters, x: np.array, y: np.array, z: np.array
+) -> Tuple[np.array, np.array, np.array]:
+    """Transform point cloud by rigid body transformation."""
+
+    H = params_to_homogeneous_transformation_matrix(parameter)
+
+    X = np.column_stack((x, y, z))
+    X_h = utils.euler_coord_to_homogeneous_coord(X)
+    X_transformed_h = np.transpose(H @ X_h.T)
+    X_transformed = utils.homogeneous_coord_to_euler_coord(X_transformed_h)
+
+    x_transformed = X_transformed[:, 0]
+    y_transformed = X_transformed[:, 1]
+    z_transformed = X_transformed[:, 2]
+
+    return x_transformed, y_transformed, z_transformed
+
+
+def compute_weighted_distance_residuals(
     x_fix: np.array,
     y_fix: np.array,
     z_fix: np.array,
@@ -218,73 +152,118 @@ def get_Apl_from_correspondences(
     y_mov: np.array,
     z_mov: np.array,
     weights_distance_residuals: float,
-) -> Tuple[np.array, np.array, np.array]:
-    """Get matrix A and vectors p, l from the point-to-plane correspondences."""
-
-    A = np.column_stack(
-        (
-            -z_mov * ny_fix + y_mov * nz_fix,
-            z_mov * nx_fix - x_mov * nz_fix,
-            -y_mov * nx_fix + x_mov * ny_fix,
-            nx_fix,
-            ny_fix,
-            nz_fix,
-        )
-    )
-
-    l = nx_fix * (x_fix - x_mov) + ny_fix * (y_fix - y_mov) + nz_fix * (z_fix - z_mov)
+) -> np.array:
+    """Compute weighted residuals for point-to-plane distances between correspondences."""
 
     no_correspondences = len(x_fix)
-    p = np.full((no_correspondences,), weights_distance_residuals)
 
-    return A, p, l
+    dx = x_mov - x_fix
+    dy = y_mov - y_fix
+    dz = z_mov - z_fix
+
+    distance_residuals = np.empty(no_correspondences)
+    for i in range(0, no_correspondences):
+        distance_residuals[i] = (
+            dx[i] * nx_fix[i] + dy[i] * ny_fix[i] + dz[i] * nz_fix[i]
+        )
+
+    weighted_distance_residuals = weights_distance_residuals * distance_residuals
+
+    return weighted_distance_residuals
 
 
-def get_Apl_from_tf_obs(
+def compute_weighted_tf_obs_residuals(
+    parameter: lmfit.Parameters,
     tf_obs: Tuple[float],
     weights_tf_obs_residuals: Tuple[float],
-) -> Tuple[np.array, np.array, np.array]:
-    """Get matrix A and vectors p, l from the direct observations of the transform parameters."""
+) -> np.array:
+    """Compute weighted residuals for direct observation of transform parameters."""
 
-    A = np.eye(6)
+    tf_obs_residuals = np.empty(6)
 
-    p = np.array(weights_tf_obs_residuals)
+    tf_obs_residuals[0] = parameter["alpha1"].value
+    tf_obs_residuals[1] = parameter["alpha2"].value
+    tf_obs_residuals[2] = parameter["alpha3"].value
+    tf_obs_residuals[3] = parameter["tx"].value
+    tf_obs_residuals[4] = parameter["ty"].value
+    tf_obs_residuals[5] = parameter["tz"].value
 
-    l = np.array(tf_obs)
+    weighted_tf_obs_residuals = weights_tf_obs_residuals * tf_obs_residuals
 
-    # Keep observation only if > 0 and not infinity (parameter is constant)
-    keep = np.greater(weights_tf_obs_residuals, 0) & np.isfinite(
-        weights_tf_obs_residuals
+    keep = np.isfinite(weights_tf_obs_residuals) & (
+        np.array(weights_tf_obs_residuals) > 0
     )
 
-    A = A[keep, :]
-    p = p[keep]
-    l = l[keep]
+    # Remove residuals where weight is infinite
+    weighted_tf_obs_residuals = weighted_tf_obs_residuals[keep]
 
-    return A, p, l
+    return weighted_tf_obs_residuals
 
 
-def euler_angles_to_linearized_rotation_matrix(
-    alpha1: float, alpha2: float, alpha3: float
+def estimate_rigid_body_transformation(
+    X_fix: np.array,
+    N_fix: np.array,
+    X_mov: np.array,
+    weights_distance_residuals: float,
+    tf_obs: Tuple[float],
+    weights_tf_obs_residuals: Tuple[float],
+) -> Tuple[np.array, np.array, lmfit.minimizer.MinimizerResult]:
+    """Estimate rigid body transformation for a given set of correspondences."""
+
+    # Define rigid body parameters
+    params = lmfit.Parameters()
+    params.add("alpha1", value=0, vary=np.isfinite(weights_tf_obs_residuals[0]))
+    params.add("alpha2", value=0, vary=np.isfinite(weights_tf_obs_residuals[1]))
+    params.add("alpha3", value=0, vary=np.isfinite(weights_tf_obs_residuals[2]))
+    params.add("tx", value=0, vary=np.isfinite(weights_tf_obs_residuals[3]))
+    params.add("ty", value=0, vary=np.isfinite(weights_tf_obs_residuals[4]))
+    params.add("tz", value=0, vary=np.isfinite(weights_tf_obs_residuals[5]))
+
+    optim_result = lmfit.minimize(
+        compute_residuals,
+        params,
+        args=(
+            X_fix,
+            N_fix,
+            X_mov,
+            weights_distance_residuals,
+            tf_obs,
+            weights_tf_obs_residuals,
+        ),
+    )
+
+    H = params_to_homogeneous_transformation_matrix(optim_result.params)
+
+    # Compute unweighted distance residuals
+    no_correspondences = X_fix.shape[0]
+    weighted_distance_residuals = optim_result.residual[0 : no_correspondences - 1]
+    unweighted_distance_residuals = (
+        weighted_distance_residuals / weights_distance_residuals
+    )
+
+    return H, unweighted_distance_residuals, optim_result
+
+
+def params_to_homogeneous_transformation_matrix(
+    params: lmfit.Parameters,
 ) -> np.array:
-    """Compute linearized rotation matrix from three Euler angles."""
+    """Compute homogeneous transformation matrix from lmfit parameters."""
 
-    dR = np.array([[1, -alpha3, alpha2], [alpha3, 1, -alpha1], [-alpha2, alpha1, 1]])
+    R = utils.euler_angles_to_linearized_rotation_matrix(
+        params["alpha1"].value,
+        params["alpha2"].value,
+        params["alpha3"].value,
+    )
 
-    return dR
-
-
-def create_homogeneous_transformation_matrix(R: np.array, t: np.array) -> np.array:
-    """Create homogeneous transformation matrix from rotation matrix R and translation vector t."""
-
-    H = np.array(
+    t = np.array(
         [
-            [R[0, 0], R[0, 1], R[0, 2], t[0]],
-            [R[1, 0], R[1, 1], R[1, 2], t[1]],
-            [R[2, 0], R[2, 1], R[2, 2], t[2]],
-            [0, 0, 0, 1],
+            params["tx"].value,
+            params["ty"].value,
+            params["tz"].value,
         ]
     )
+
+    H = utils.create_homogeneous_transformation_matrix(R, t)
 
     return H
 
@@ -304,8 +283,8 @@ def check_convergence_criteria(
 
 
 def simpleicp(
-    X_fix: PointCloud,
-    X_mov: PointCloud,
+    X_fix: np.array,
+    X_mov: np.array,
     correspondences: int = 1000,
     neighbors: int = 10,
     min_planarity: float = 0.3,
@@ -318,6 +297,8 @@ def simpleicp(
 ) -> Tuple[np.array, np.array]:
     """Implementation of a rather simple version of the Iterative Closest Point (ICP) algorithm."""
 
+    # Some input validation
+    # TODO Input of tf_obs in degree for first 3 elements?
     assert weights_distance_residuals > 0, "Weights must be > 0!"
     assert len(tf_obs) == 6, "Tuple must have exactly 6 elements!"
     assert len(weights_tf_obs_residuals) == 6, "Tuple must have exactly 6 elements!"
@@ -328,8 +309,14 @@ def simpleicp(
 
     start_time = time.time()
     print("Create point cloud objects ...")
-    pcfix = PointCloud(X_fix[:, 0], X_fix[:, 1], X_fix[:, 2])
-    pcmov = PointCloud(X_mov[:, 0], X_mov[:, 1], X_mov[:, 2])
+    pcfix = PointCloud(X_fix)
+    pcmov = PointCloud(X_mov)
+
+    # Set initial transform
+    R = utils.euler_angles_to_rotation_matrix(tf_obs[0], tf_obs[1], tf_obs[2])
+    t = tf_obs[3:]
+    H = utils.create_homogeneous_transformation_matrix(R, t)
+    pcmov.set_H(H)
 
     if np.isfinite(max_overlap_distance):
         print("Consider partial overlap of point clouds ...")
@@ -348,7 +335,24 @@ def simpleicp(
     print("Estimate normals of selected points ...")
     pcfix.estimate_normals(neighbors)
 
-    H = np.eye(4)
+    # Initialize some variables
+    rigid_body_parameters = RigidBodyParameters
+    rigid_body_parameters.alpha1.observed_value = tf_obs[0]
+    rigid_body_parameters.alpha2.observed_value = tf_obs[1]
+    rigid_body_parameters.alpha3.observed_value = tf_obs[2]
+    rigid_body_parameters.tx.observed_value = tf_obs[3]
+    rigid_body_parameters.ty.observed_value = tf_obs[4]
+    rigid_body_parameters.tz.observed_value = tf_obs[5]
+    rigid_body_parameters.alpha1.observation_weight = weights_tf_obs_residuals[0]
+    rigid_body_parameters.alpha2.observation_weight = weights_tf_obs_residuals[1]
+    rigid_body_parameters.alpha3.observation_weight = weights_tf_obs_residuals[2]
+    rigid_body_parameters.tx.observation_weight = weights_tf_obs_residuals[3]
+    rigid_body_parameters.ty.observation_weight = weights_tf_obs_residuals[4]
+    rigid_body_parameters.tz.observation_weight = weights_tf_obs_residuals[5]
+    rigid_body_parameters.alpha1.scale_for_report = 180 / np.pi
+    rigid_body_parameters.alpha2.scale_for_report = 180 / np.pi
+    rigid_body_parameters.alpha3.scale_for_report = 180 / np.pi
+
     residual_distances = []
 
     print("Start iterations ...")
@@ -360,20 +364,12 @@ def simpleicp(
 
         # Estimate weight of distances if value is < 0
         if weights_distance_residuals < 0:
-            weights_distance_residuals = 1 / (
-                stats.median_absolute_deviation(initial_distances) ** 2
-            )
+            weights_distance_residuals = 1 / (np.std(initial_distances) ** 2)
 
-        dH, residuals = estimate_rigid_body_transformation(
-            pcfix.x_sel,
-            pcfix.y_sel,
-            pcfix.z_sel,
-            pcfix.nx[pcfix.sel],
-            pcfix.ny[pcfix.sel],
-            pcfix.nz[pcfix.sel],
-            pcmov.x_sel,
-            pcmov.y_sel,
-            pcmov.z_sel,
+        dH, residuals, optim_result = estimate_rigid_body_transformation(
+            pcfix.X[pcfix.sel, :],
+            pcfix.N[pcfix.sel, :],
+            pcmov.X[pcmov.sel, :],
             weights_distance_residuals,
             tf_obs,
             weights_tf_obs_residuals,
@@ -384,6 +380,9 @@ def simpleicp(
         pcmov.transform(dH)
 
         H = dH @ H
+
+        update_rigid_body_parameters(rigid_body_parameters, H, optim_result)
+
         pcfix.sel = sel_orig
 
         if i > 0:
@@ -395,9 +394,9 @@ def simpleicp(
 
         if i == 0:
             print(
-                f"{'Iteration':9s} | "
-                f"{'correspondences':15s} | "
-                f"{'mean(residuals)':15s} | "
+                f"{'iteration':>9s} | "
+                f"{'correspondences':>15s} | "
+                f"{'mean(residuals)':>15s} | "
                 f"{'std(residuals)':>15s}"
             )
             print(
@@ -418,6 +417,92 @@ def simpleicp(
     print(f"[{H[1, 0]:12.6f} {H[1, 1]:12.6f} {H[1, 2]:12.6f} {H[1, 3]:12.6f}]")
     print(f"[{H[2, 0]:12.6f} {H[2, 1]:12.6f} {H[2, 2]:12.6f} {H[2, 3]:12.6f}]")
     print(f"[{H[3, 0]:12.6f} {H[3, 1]:12.6f} {H[3, 2]:12.6f} {H[3, 3]:12.6f}]")
+
+    # TODO tf_obs does not make too much sense as we estimate always dH only
+    # TODO report final global transformation parameters (instead of params from last iteration)
+
+    print(
+        "... which corresponds to the following rigid body transformation parameters:"
+    )
+    print(
+        f"{'parameter':>9s} | "
+        f"{'est. value':>16s} | "
+        f"{'est. uncertainty':>16s} | "
+        f"{'obs. value':>16s} | "
+        f"{'obs. weight':>16s}"
+    )
+    print(
+        f"{'alpha1':>9s} | "
+        f"{rigid_body_parameters.alpha1.estimated_value*rigid_body_parameters.alpha1.scale_for_report:16.6f} | "
+        f"{rigid_body_parameters.alpha1.estimated_uncertainty*rigid_body_parameters.alpha1.scale_for_report:16.6f} | "
+        f"{rigid_body_parameters.alpha1.observed_value*rigid_body_parameters.alpha1.scale_for_report:16.6f} | "
+        f"{rigid_body_parameters.alpha1.observation_weight:16.6f}"
+    )
+    print(
+        f"{'alpha2':>9s} | "
+        f"{rigid_body_parameters.alpha2.estimated_value*rigid_body_parameters.alpha2.scale_for_report:16.6f} | "
+        f"{rigid_body_parameters.alpha2.estimated_uncertainty*rigid_body_parameters.alpha2.scale_for_report:16.6f} | "
+        f"{rigid_body_parameters.alpha2.observed_value*rigid_body_parameters.alpha2.scale_for_report:16.6f} | "
+        f"{rigid_body_parameters.alpha2.observation_weight:16.6f}"
+    )
+    print(
+        f"{'alpha3':>9s} | "
+        f"{rigid_body_parameters.alpha3.estimated_value*rigid_body_parameters.alpha3.scale_for_report:16.6f} | "
+        f"{rigid_body_parameters.alpha3.estimated_uncertainty*rigid_body_parameters.alpha3.scale_for_report:16.6f} | "
+        f"{rigid_body_parameters.alpha3.observed_value*rigid_body_parameters.alpha3.scale_for_report:16.6f} | "
+        f"{rigid_body_parameters.alpha3.observation_weight:16.6f}"
+    )
+    print(
+        f"{'tx':>9s} | "
+        f"{rigid_body_parameters.tx.estimated_value:16.6f} | "
+        f"{rigid_body_parameters.tx.estimated_uncertainty:16.6f} | "
+        f"{rigid_body_parameters.tx.observed_value:16.6f} | "
+        f"{rigid_body_parameters.tx.observation_weight:16.6f}"
+    )
+    print(
+        f"{'ty':>9s} | "
+        f"{rigid_body_parameters.ty.estimated_value:16.6f} | "
+        f"{rigid_body_parameters.ty.estimated_uncertainty:16.6f} | "
+        f"{rigid_body_parameters.ty.observed_value:16.6f} | "
+        f"{rigid_body_parameters.ty.observation_weight:16.6f}"
+    )
+    print(
+        f"{'tz':>9s} | "
+        f"{rigid_body_parameters.tz.estimated_value:16.6f} | "
+        f"{rigid_body_parameters.tz.estimated_uncertainty:16.6f} | "
+        f"{rigid_body_parameters.tz.observed_value:16.6f} | "
+        f"{rigid_body_parameters.tz.observation_weight:16.6f}"
+    )
+
+    print(
+        "(Unit of est. value, est. uncertainty, and obs.value for alpha1/2/3 is degree)"
+    )
+
     print(f"Finished in {time.time() - start_time:.3f} seconds!")
 
     return H, pcmov.X
+
+
+def update_rigid_body_parameters(rigid_body_parameters, H, optim_result):
+    (
+        rigid_body_parameters.alpha1.estimated_value,
+        rigid_body_parameters.alpha2.estimated_value,
+        rigid_body_parameters.alpha3.estimated_value,
+    ) = utils.rotation_matrix_to_euler_angles(H[0:3, 0:3])
+
+    rigid_body_parameters.tx.estimated_value = H[0, 3]
+    rigid_body_parameters.ty.estimated_value = H[1, 3]
+    rigid_body_parameters.tz.estimated_value = H[2, 3]
+
+    # rigid_body_parameters.alpha1.estimated_uncertainty = optim_result.params[
+    #     "alpha1"
+    # ].stderr
+    # rigid_body_parameters.alpha2.estimated_uncertainty = optim_result.params[
+    #     "alpha2"
+    # ].stderr
+    # rigid_body_parameters.alpha3.estimated_uncertainty = optim_result.params[
+    #     "alpha3"
+    # ].stderr
+    # rigid_body_parameters.tx.estimated_uncertainty = optim_result.params["tx"].stderr
+    # rigid_body_parameters.ty.estimated_uncertainty = optim_result.params["ty"].stderr
+    # rigid_body_parameters.tz.estimated_uncertainty = optim_result.params["tz"].stderr

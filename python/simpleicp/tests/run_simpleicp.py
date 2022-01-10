@@ -8,7 +8,7 @@ import numpy as np
 
 from simpleicp import simpleicp
 
-dataset = "all"
+dataset = "Bunny"
 export_results = False
 plot_results = False
 
@@ -22,26 +22,44 @@ if dataset == "Dragon" or dataset == "all":
 
 if dataset == "Airborne Lidar" or dataset == "all":
     print('Processing dataset "Airborne Lidar"')
-    X_fix = np.genfromtxt(tests_dirpath.joinpath(Path("../../../data/airborne_lidar1.xyz")))
-    X_mov = np.genfromtxt(tests_dirpath.joinpath(Path("../../../data/airborne_lidar2.xyz")))
+    X_fix = np.genfromtxt(
+        tests_dirpath.joinpath(Path("../../../data/airborne_lidar1.xyz"))
+    )
+    X_mov = np.genfromtxt(
+        tests_dirpath.joinpath(Path("../../../data/airborne_lidar2.xyz"))
+    )
     H, X_mov_transformed = simpleicp.simpleicp(X_fix, X_mov)
 
 if dataset == "Terrestrial Lidar" or dataset == "all":
     print('Processing dataset "Terrestrial Lidar"')
-    X_fix = np.genfromtxt(tests_dirpath.joinpath(Path("../../../data/terrestrial_lidar1.xyz")))
-    X_mov = np.genfromtxt(tests_dirpath.joinpath(Path("../../../data/terrestrial_lidar2.xyz")))
+    X_fix = np.genfromtxt(
+        tests_dirpath.joinpath(Path("../../../data/terrestrial_lidar1.xyz"))
+    )
+    X_mov = np.genfromtxt(
+        tests_dirpath.joinpath(Path("../../../data/terrestrial_lidar2.xyz"))
+    )
     H, X_mov_transformed = simpleicp.simpleicp(X_fix, X_mov)
 
 if dataset == "Bunny" or dataset == "all":
     print('Processing dataset "Bunny"')
     X_fix = np.genfromtxt(tests_dirpath.joinpath(Path("../../../data/bunny_part1.xyz")))
     X_mov = np.genfromtxt(tests_dirpath.joinpath(Path("../../../data/bunny_part2.xyz")))
-    H, X_mov_transformed = simpleicp.simpleicp(X_fix, X_mov, max_overlap_distance=1)
+    H, X_mov_transformed = simpleicp.simpleicp(
+        X_fix,
+        X_mov,
+        max_overlap_distance=1,
+        tf_obs=(0.0, 5*np.pi/180, 10.0*np.pi/180, 0.0, 0.0, 0.0),
+        weights_tf_obs_residuals=(0.0, np.inf, np.inf, 0.0, 0.0, 0.0),
+    )
 
 if dataset == "Multisensor" or dataset == "all":
     print('Processing dataset "Multisensor"')
-    X_fix = np.genfromtxt(tests_dirpath.joinpath(Path("../../../data/multisensor_lidar.xyz")))
-    X_mov = np.genfromtxt(tests_dirpath.joinpath(Path("../../../data/multisensor_radar.xyz")))
+    X_fix = np.genfromtxt(
+        tests_dirpath.joinpath(Path("../../../data/multisensor_lidar.xyz"))
+    )
+    X_mov = np.genfromtxt(
+        tests_dirpath.joinpath(Path("../../../data/multisensor_radar.xyz"))
+    )
     H, X_mov_transformed = simpleicp.simpleicp(X_fix, X_mov, max_overlap_distance=2.0)
 
 # Export original and adjusted point clouds to xyz files to check the result
