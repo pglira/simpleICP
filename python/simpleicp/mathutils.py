@@ -1,5 +1,5 @@
 """
-Collection of utility functions used by > 1 modules.
+Collection of math utility functions used by > 1 modules.
 """
 
 from typing import Tuple
@@ -7,23 +7,23 @@ from typing import Tuple
 import numpy as np
 
 
-def euler_coord_to_homogeneous_coord(XE: np.array) -> np.array:
+def euler_coord_to_homogeneous_coord(Xe: np.array) -> np.array:
     """Convert Euler coordinates to homogeneous coordinates."""
 
-    no_points = np.shape(XE)[0]
-    XH = np.column_stack((XE, np.ones(no_points)))
+    no_points = np.shape(Xe)[0]
+    Xh = np.column_stack((Xe, np.ones(no_points)))
 
-    return XH
+    return Xh
 
 
-def homogeneous_coord_to_euler_coord(XH: np.array) -> np.array:
+def homogeneous_coord_to_euler_coord(Xh: np.array) -> np.array:
     """Convert homogeneous coordinates to Euler coordinates."""
 
-    XE = np.column_stack(
-        (XH[:, 0] / XH[:, 3], XH[:, 1] / XH[:, 3], XH[:, 2] / XH[:, 3])
+    Xe = np.column_stack(
+        (Xh[:, 0] / Xh[:, 3], Xh[:, 1] / Xh[:, 3], Xh[:, 2] / Xh[:, 3])
     )
 
-    return XE
+    return Xe
 
 
 def euler_angles_to_linearized_rotation_matrix(
@@ -39,6 +39,7 @@ def euler_angles_to_linearized_rotation_matrix(
 def euler_angles_to_rotation_matrix(
     alpha1: float, alpha2: float, alpha3: float
 ) -> np.array:
+    """Get Euler angles from rotation matrix."""
 
     R = np.array(
         [

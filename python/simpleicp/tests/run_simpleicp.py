@@ -5,20 +5,39 @@ Read two point clouds from xyz files and run simpleICP.
 from pathlib import Path
 
 import numpy as np
+from simpleicp import PointCloud, SimpleICP
 
-from simpleicp import simpleicp
-
-dataset = "Bunny"
+# User inputs
+dataset = "all"
 export_results = False
 plot_results = False
 
 tests_dirpath = Path(__file__).parent
 
+
+def run_simpleicp(X_fix, X_mov, kwargs):
+    """Small helper function to run simpleICP for each dataset."""
+
+    # Create point cloud for fixed point cloud
+    pc_fix = PointCloud(X_fix, columns=["x", "y", "z"])
+
+    # Create point cloud for movable point cloud (copy=True to keep original X_mov for plot)
+    pc_mov = PointCloud(X_mov, columns=["x", "y", "z"], copy=True)
+
+    # Create simpleICP object, add point clouds, and run algorithm!
+    icp = SimpleICP()
+    icp.add_point_clouds(pc_fix, pc_mov)
+    _, X_mov_transformed = icp.run(**kwargs)
+
+    return X_mov_transformed
+
+
 if dataset == "Dragon" or dataset == "all":
     print('Processing dataset "Dragon"')
     X_fix = np.genfromtxt(tests_dirpath.joinpath(Path("../../../data/dragon1.xyz")))
     X_mov = np.genfromtxt(tests_dirpath.joinpath(Path("../../../data/dragon2.xyz")))
-    H, X_mov_transformed = simpleicp.simpleicp(X_fix, X_mov)
+    kwargs = {}
+    X_mov_transformed = run_simpleicp(X_fix, X_mov, kwargs)
 
 if dataset == "Airborne Lidar" or dataset == "all":
     print('Processing dataset "Airborne Lidar"')
@@ -28,7 +47,8 @@ if dataset == "Airborne Lidar" or dataset == "all":
     X_mov = np.genfromtxt(
         tests_dirpath.joinpath(Path("../../../data/airborne_lidar2.xyz"))
     )
-    H, X_mov_transformed = simpleicp.simpleicp(X_fix, X_mov)
+    kwargs = {}
+    X_mov_transformed = run_simpleicp(X_fix, X_mov, kwargs)
 
 if dataset == "Terrestrial Lidar" or dataset == "all":
     print('Processing dataset "Terrestrial Lidar"')
@@ -38,19 +58,17 @@ if dataset == "Terrestrial Lidar" or dataset == "all":
     X_mov = np.genfromtxt(
         tests_dirpath.joinpath(Path("../../../data/terrestrial_lidar2.xyz"))
     )
-    H, X_mov_transformed = simpleicp.simpleicp(X_fix, X_mov)
+    kwargs = {}
+    X_mov_transformed = run_simpleicp(X_fix, X_mov, kwargs)
 
 if dataset == "Bunny" or dataset == "all":
     print('Processing dataset "Bunny"')
     X_fix = np.genfromtxt(tests_dirpath.joinpath(Path("../../../data/bunny_part1.xyz")))
     X_mov = np.genfromtxt(tests_dirpath.joinpath(Path("../../../data/bunny_part2.xyz")))
-    H, X_mov_transformed = simpleicp.simpleicp(
-        X_fix,
-        X_mov,
-        max_overlap_distance=1,
-        tf_obs=(0.0, 5*np.pi/180, 10.0*np.pi/180, 0.0, 0.0, 0.0),
-        weights_tf_obs_residuals=(0.0, np.inf, np.inf, 0.0, 0.0, 0.0),
-    )
+    kwargs = {
+        "max_overlap_distance": 1,
+    }
+    X_mov_transformed = run_simpleicp(X_fix, X_mov, kwargs)
 
 if dataset == "Multisensor" or dataset == "all":
     print('Processing dataset "Multisensor"')
@@ -60,7 +78,12 @@ if dataset == "Multisensor" or dataset == "all":
     X_mov = np.genfromtxt(
         tests_dirpath.joinpath(Path("../../../data/multisensor_radar.xyz"))
     )
-    H, X_mov_transformed = simpleicp.simpleicp(X_fix, X_mov, max_overlap_distance=2.0)
+    kwargs = {
+        "max_overlap_distance": 1,
+        "rbp_observed_values": (0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "rbp_observation_weights": (0.0, np.inf, 0.0, 0.0, 0.0, 0.0),
+    }
+    X_mov_transformed = run_simpleicp(X_fix, X_mov, kwargs)
 
 # Export original and adjusted point clouds to xyz files to check the result
 if export_results:
@@ -88,21 +111,21 @@ if plot_results:
         X_fix[idx_points_fix, 1],
         X_fix[idx_points_fix, 2],
         c="r",
-        marker=",",
+        marker=".",
     )
     ax.scatter(
         X_mov[idx_points_mov, 0],
         X_mov[idx_points_mov, 1],
         X_mov[idx_points_mov, 2],
         c="g",
-        marker=",",
+        marker=".",
     )
     ax.scatter(
         X_mov_transformed[idx_points_mov, 0],
         X_mov_transformed[idx_points_mov, 1],
         X_mov_transformed[idx_points_mov, 2],
         c="b",
-        marker=",",
+        marker=".",
     )
     ax.set_xlabel("x")
     ax.set_ylabel("y")

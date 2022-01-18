@@ -2,5 +2,6 @@
     "python.pythonPath": "/usr/local/bin/python",
     "python.linting.pylintArgs": [
         "--disable=invalid-name"
-    ]
+    ],
+    "cSpell.enabled": false
 }

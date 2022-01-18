@@ -1,508 +1,286 @@
 """
 Implementation of a rather simple version of the Iterative Closest Point (ICP) algorithm.
+
+Dev notes:
+    - Define type hints for all parameters and return values.
+    - All non-private functions and class methods should have extended docstrings, i.e. including
+    parameter and return values description. For the rest single-line docstrings suffice.
 """
 
 import time
-from dataclasses import dataclass
-from typing import Tuple
+from dataclasses import fields
+from typing import Optional, Tuple
 
-import lmfit
 import numpy as np
-from lmfit.parameter import Parameters
-from scipy import spatial, stats
 
-from . import utils
-from .pointcloud import PointCloud
+from . import corrpts, optimization, pointcloud
 
 
-@dataclass
-class Parameter:
-    """Data class for a single optimization parameter."""
+class SimpleICP:
+    """Class for setting up and run simpleICP."""
 
-    estimated_value: float = np.nan
-    estimated_uncertainty: float = np.nan
-    observed_value: float = np.nan
-    observation_weight: float = np.nan
-    scale_for_report: float = 1
+    def __init__(self) -> None:
+        """Constructor method."""
 
+        self.pc1 = None
+        self.pc2 = None
 
-@dataclass
-class RigidBodyParameters:
+    def add_point_clouds(
+        self,
+        pc_fix: pointcloud.PointCloud,
+        pc_mov: pointcloud.PointCloud,
+    ) -> None:
+        """Add fixed and movable point cloud.
 
-    alpha1: Parameter = Parameter()
-    alpha2: Parameter = Parameter()
-    alpha3: Parameter = Parameter()
-    tx: Parameter = Parameter()
-    ty: Parameter = Parameter()
-    tz: Parameter = Parameter()
+        Args:
+            pc_fix (pointcloud.PointCloud): Fixed point cloud.
+            pc_mov (pointcloud.PointCloud): Movable point cloud. This point cloud
+                will be shifted and rotated (transformed) by applying a rigid body transformation.
+        """
 
+        # We pc_fix/pc_mov only for the user interface - internally they are pc1/pc2
+        self.pc1 = pc_fix
+        self.pc2 = pc_mov
 
-def matching(pcfix: PointCloud, pcmov: PointCloud) -> np.array:
-    """Matching of point clouds."""
-    kdtree = spatial.cKDTree(pcmov.X)
-    _, pcmov.sel = kdtree.query(pcfix.X[pcfix.sel, :], k=1, p=2, n_jobs=-1)
+    def run(
+        self,
+        correspondences: int = 1000,
+        neighbors: int = 10,
+        min_planarity: float = 0.3,
+        max_overlap_distance: float = np.inf,
+        min_change: float = 1.0,
+        max_iterations: int = 100,
+        distance_weights: Optional[float] = 1,  # can also be None
+        rbp_observed_values: Tuple[float] = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        rbp_observation_weights: Tuple[float] = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+    ) -> Tuple[np.array, np.array]:
+        """Run simpleICP algorithm.
 
-    dx = pcmov.X[pcmov.sel, 0] - pcfix.X[pcfix.sel, 0]
-    dy = pcmov.X[pcmov.sel, 1] - pcfix.X[pcfix.sel, 1]
-    dz = pcmov.X[pcmov.sel, 2] - pcfix.X[pcfix.sel, 2]
+        Note: See https://github.com/pglira/simpleICP for an extended description of the algorithm
+            and arguments.
 
-    nx = pcfix.N[pcfix.sel, 0]
-    ny = pcfix.N[pcfix.sel, 1]
-    nz = pcfix.N[pcfix.sel, 2]
+        Args:
+            correspondences (int, optional): Number of correspondences selected initially in the
+                fixed point cloud for the subsequent point cloud matching. Defaults to 1000.
+            neighbors (int, optional): Number of neighboring points used to estimate the normal
+                vector and the planarity of the selected points. Defaults to 10.
+            min_planarity (float, optional): Minimum planarity value of a correspondence. Defaults
+                to 0.3.
+            max_overlap_distance (float, optional): Maximum overlap distance between the two point
+                clouds. Defaults to np.inf.
+            min_change (float, optional): Value to test a convergency criteria after each iteration:
+                if the mean and the standard deviation of the point-to-plane distances do not
+                change more than min_change (in %), the iteration is stopped. Defaults to 1.0.
+            max_iterations (int, optional): Maximum number of ICP iterations. Defaults to 100.
+            distance_weights (Optional[float], optional): Weight factor by which the point-to-plane
+                residuals are multiplied. Set to None for automatic estimation - however, this makes
+                only sense if the rigid body transformation parameters are observed, see the
+                following arguments. Defaults to 1.
+            rbp_observed_values (Tuple[float], optional): Values of direct observation of the rigid
+                body parameters. Defaults to (0.0, 0.0, 0.0, 0.0, 0.0, 0.0).
+            rbp_observation_weights (Tuple[float], optional): Weight factors with which the
+                residuals of the direct observations are multiplied. The residuals are defined as
+                difference between the estimated rbp and the observed rbp. Defaults to
+                (0.0, 0.0, 0.0, 0.0, 0.0, 0.0).
 
-    no_correspondences = pcfix.no_selected_points
-    distances = np.empty(no_correspondences)
-    for i in range(0, no_correspondences):
-        distances[i] = dx[i] * nx[i] + dy[i] * ny[i] + dz[i] * nz[i]
+        Returns:
+            Tuple[np.array, np.array]:
+                H: Estimated homogeneous transformation matrix.
+                X_mov_transformed: Points of movable point cloud transformed by H.
+        """
 
-    return distances
-
-
-def reject(
-    pcfix: PointCloud, pcmov: PointCloud, min_planarity: float, distances: np.array
-) -> np.array:
-    """Rejection of correspondences on the basis of multiple criterias."""
-
-    planarity = pcfix.planarity[pcfix.sel]
-
-    med = np.median(distances)
-    sigmad = stats.median_absolute_deviation(distances)
-
-    keep_distance = np.array([abs(d - med) <= 3 * sigmad for d in distances])
-    keep_planarity = np.array([p >= min_planarity for p in planarity])
-
-    keep = keep_distance & keep_planarity
-
-    pcfix.sel = pcfix.sel[keep]
-    pcmov.sel = pcmov.sel[keep]
-    distances = distances[keep]
-
-    return distances
-
-
-def compute_residuals(
-    parameter: lmfit.Parameters,
-    X_fix: np.array,
-    N_fix: np.array,
-    X_mov: np.array,
-    weights_distance_residuals: float,
-    tf_obs: Tuple[float],
-    weights_tf_obs_residuals: Tuple[float],
-) -> np.array:
-    """Compute residuals of optimization problem."""
-
-    (
-        x_mov_transformed,
-        y_mov_transformed,
-        z_mov_transformed,
-    ) = transform_point_cloud(parameter, X_mov)
-
-    weighted_distance_residuals = compute_weighted_distance_residuals(
-        x_fix,
-        y_fix,
-        z_fix,
-        nx_fix,
-        ny_fix,
-        nz_fix,
-        x_mov_transformed,
-        y_mov_transformed,
-        z_mov_transformed,
-        weights_distance_residuals,
-    )
-
-    weighted_tf_obs_residuals = compute_weighted_tf_obs_residuals(
-        parameter, tf_obs, weights_tf_obs_residuals
-    )
-
-    # Combine all residuals
-    weighted_residuals = np.concatenate(
-        (weighted_distance_residuals, weighted_tf_obs_residuals)
-    )
-
-    return weighted_residuals
-
-
-def transform_point_cloud(
-    parameter: lmfit.Parameters, x: np.array, y: np.array, z: np.array
-) -> Tuple[np.array, np.array, np.array]:
-    """Transform point cloud by rigid body transformation."""
-
-    H = params_to_homogeneous_transformation_matrix(parameter)
-
-    X = np.column_stack((x, y, z))
-    X_h = utils.euler_coord_to_homogeneous_coord(X)
-    X_transformed_h = np.transpose(H @ X_h.T)
-    X_transformed = utils.homogeneous_coord_to_euler_coord(X_transformed_h)
-
-    x_transformed = X_transformed[:, 0]
-    y_transformed = X_transformed[:, 1]
-    z_transformed = X_transformed[:, 2]
-
-    return x_transformed, y_transformed, z_transformed
-
-
-def compute_weighted_distance_residuals(
-    x_fix: np.array,
-    y_fix: np.array,
-    z_fix: np.array,
-    nx_fix: np.array,
-    ny_fix: np.array,
-    nz_fix: np.array,
-    x_mov: np.array,
-    y_mov: np.array,
-    z_mov: np.array,
-    weights_distance_residuals: float,
-) -> np.array:
-    """Compute weighted residuals for point-to-plane distances between correspondences."""
-
-    no_correspondences = len(x_fix)
-
-    dx = x_mov - x_fix
-    dy = y_mov - y_fix
-    dz = z_mov - z_fix
-
-    distance_residuals = np.empty(no_correspondences)
-    for i in range(0, no_correspondences):
-        distance_residuals[i] = (
-            dx[i] * nx_fix[i] + dy[i] * ny_fix[i] + dz[i] * nz_fix[i]
+        self.__check_arguments(
+            distance_weights, rbp_observed_values, rbp_observation_weights
         )
 
-    weighted_distance_residuals = weights_distance_residuals * distance_residuals
+        start_time = time.time()
 
-    return weighted_distance_residuals
+        if np.isfinite(max_overlap_distance):
 
+            print("Consider partial overlap of point clouds ...")
+            self.pc1.select_in_range(self.pc2.X, max_range=max_overlap_distance)
 
-def compute_weighted_tf_obs_residuals(
-    parameter: lmfit.Parameters,
-    tf_obs: Tuple[float],
-    weights_tf_obs_residuals: Tuple[float],
-) -> np.array:
-    """Compute weighted residuals for direct observation of transform parameters."""
+            if not self.pc1.num_selected_points > 0:
+                raise SimpleICPException(
+                    "Point clouds do not overlap within max_overlap_distance = "
+                    f"{max_overlap_distance:.5f}! Consider increasing the value of "
+                    "max_overlap_distance."
+                )
 
-    tf_obs_residuals = np.empty(6)
+        print("Select points for correspondences in fixed point cloud ...")
+        self.pc1.select_n_points(correspondences)
+        selected_orig = self.pc1["selected"]
 
-    tf_obs_residuals[0] = parameter["alpha1"].value
-    tf_obs_residuals[1] = parameter["alpha2"].value
-    tf_obs_residuals[2] = parameter["alpha3"].value
-    tf_obs_residuals[3] = parameter["tx"].value
-    tf_obs_residuals[4] = parameter["ty"].value
-    tf_obs_residuals[5] = parameter["tz"].value
+        if not {"nx", "ny", "nz", "planarity"}.issubset(self.pc1.columns):
+            print("Estimate normals of selected points ...")
+            self.pc1.estimate_normals(neighbors)
 
-    weighted_tf_obs_residuals = weights_tf_obs_residuals * tf_obs_residuals
+        H = np.eye(4)
 
-    keep = np.isfinite(weights_tf_obs_residuals) & (
-        np.array(weights_tf_obs_residuals) > 0
-    )
+        distance_residuals = []
 
-    # Remove residuals where weight is infinite
-    weighted_tf_obs_residuals = weighted_tf_obs_residuals[keep]
+        print("Start iterations ...")
+        for it in range(0, max_iterations):
 
-    return weighted_tf_obs_residuals
+            cp = corrpts.CorrPts(self.pc1, self.pc2)
 
+            # We need to temporarily transform the moving point cloud for matching
+            self.pc2.transform_by_H(H)
+            cp.match()
+            self.pc2.transform_by_H(np.linalg.inv(H))
 
-def estimate_rigid_body_transformation(
-    X_fix: np.array,
-    N_fix: np.array,
-    X_mov: np.array,
-    weights_distance_residuals: float,
-    tf_obs: Tuple[float],
-    weights_tf_obs_residuals: Tuple[float],
-) -> Tuple[np.array, np.array, lmfit.minimizer.MinimizerResult]:
-    """Estimate rigid body transformation for a given set of correspondences."""
+            # Rejection of possibly false correspondences
+            cp.reject_wrt_planarity(min_planarity)
+            cp.reject_wrt_point_to_plane_distances()
+            # cp.reject_wrt_to_angle_between_normals()  # not implemented yet
 
-    # Define rigid body parameters
-    params = lmfit.Parameters()
-    params.add("alpha1", value=0, vary=np.isfinite(weights_tf_obs_residuals[0]))
-    params.add("alpha2", value=0, vary=np.isfinite(weights_tf_obs_residuals[1]))
-    params.add("alpha3", value=0, vary=np.isfinite(weights_tf_obs_residuals[2]))
-    params.add("tx", value=0, vary=np.isfinite(weights_tf_obs_residuals[3]))
-    params.add("ty", value=0, vary=np.isfinite(weights_tf_obs_residuals[4]))
-    params.add("tz", value=0, vary=np.isfinite(weights_tf_obs_residuals[5]))
+            if it == 0:
+                initial_distances = cp.point_to_plane_distances
+                rbp_initial_values = rbp_observed_values
+            else:
+                rbp_initial_values = rbp_estimated_values
 
-    optim_result = lmfit.minimize(
-        compute_residuals,
-        params,
-        args=(
-            X_fix,
-            N_fix,
-            X_mov,
-            weights_distance_residuals,
-            tf_obs,
-            weights_tf_obs_residuals,
-        ),
-    )
+            # Estimate weight of distances if value is None
+            if distance_weights is None:
+                distance_weights = 1 / (np.std(cp.point_to_plane_distances) ** 2)
 
-    H = params_to_homogeneous_transformation_matrix(optim_result.params)
-
-    # Compute unweighted distance residuals
-    no_correspondences = X_fix.shape[0]
-    weighted_distance_residuals = optim_result.residual[0 : no_correspondences - 1]
-    unweighted_distance_residuals = (
-        weighted_distance_residuals / weights_distance_residuals
-    )
-
-    return H, unweighted_distance_residuals, optim_result
-
-
-def params_to_homogeneous_transformation_matrix(
-    params: lmfit.Parameters,
-) -> np.array:
-    """Compute homogeneous transformation matrix from lmfit parameters."""
-
-    R = utils.euler_angles_to_linearized_rotation_matrix(
-        params["alpha1"].value,
-        params["alpha2"].value,
-        params["alpha3"].value,
-    )
-
-    t = np.array(
-        [
-            params["tx"].value,
-            params["ty"].value,
-            params["tz"].value,
-        ]
-    )
-
-    H = utils.create_homogeneous_transformation_matrix(R, t)
-
-    return H
-
-
-def check_convergence_criteria(
-    distances_new: np.array, distances_old: np.array, min_change: float
-) -> bool:
-    """Check if the convergence criteria is met."""
-
-    def change(new, old):
-        return np.abs((new - old) / old * 100)
-
-    change_of_mean = change(np.mean(distances_new), np.mean(distances_old))
-    change_of_std = change(np.std(distances_new), np.std(distances_old))
-
-    return True if change_of_mean < min_change and change_of_std < min_change else False
-
-
-def simpleicp(
-    X_fix: np.array,
-    X_mov: np.array,
-    correspondences: int = 1000,
-    neighbors: int = 10,
-    min_planarity: float = 0.3,
-    max_overlap_distance: float = np.inf,
-    min_change: float = 1.0,
-    max_iterations: int = 100,
-    weights_distance_residuals: float = 1.0,
-    tf_obs: Tuple[float] = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-    weights_tf_obs_residuals: Tuple[float] = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-) -> Tuple[np.array, np.array]:
-    """Implementation of a rather simple version of the Iterative Closest Point (ICP) algorithm."""
-
-    # Some input validation
-    # TODO Input of tf_obs in degree for first 3 elements?
-    assert weights_distance_residuals > 0, "Weights must be > 0!"
-    assert len(tf_obs) == 6, "Tuple must have exactly 6 elements!"
-    assert len(weights_tf_obs_residuals) == 6, "Tuple must have exactly 6 elements!"
-    assert all([w >= 0 for w in weights_tf_obs_residuals]), "Weights must be >= 0!"
-    assert any(
-        np.isfinite(weights_tf_obs_residuals)
-    ), "At least one weight must be finite!"
-
-    start_time = time.time()
-    print("Create point cloud objects ...")
-    pcfix = PointCloud(X_fix)
-    pcmov = PointCloud(X_mov)
-
-    # Set initial transform
-    R = utils.euler_angles_to_rotation_matrix(tf_obs[0], tf_obs[1], tf_obs[2])
-    t = tf_obs[3:]
-    H = utils.create_homogeneous_transformation_matrix(R, t)
-    pcmov.set_H(H)
-
-    if np.isfinite(max_overlap_distance):
-        print("Consider partial overlap of point clouds ...")
-        pcfix.select_in_range(pcmov.X, max_range=max_overlap_distance)
-        assert pcfix.no_selected_points > 0, (
-            "Point clouds do not overlap within max_overlap_distance = ",
-            f"{max_overlap_distance:.5f}! Consider increasing the value of max_overlap_distance.",
-        )
-
-    print(
-        "Select points for correspondences within overlap area of fixed point cloud ..."
-    )
-    pcfix.select_n_points(correspondences)
-    sel_orig = pcfix.sel
-
-    print("Estimate normals of selected points ...")
-    pcfix.estimate_normals(neighbors)
-
-    # Initialize some variables
-    rigid_body_parameters = RigidBodyParameters
-    rigid_body_parameters.alpha1.observed_value = tf_obs[0]
-    rigid_body_parameters.alpha2.observed_value = tf_obs[1]
-    rigid_body_parameters.alpha3.observed_value = tf_obs[2]
-    rigid_body_parameters.tx.observed_value = tf_obs[3]
-    rigid_body_parameters.ty.observed_value = tf_obs[4]
-    rigid_body_parameters.tz.observed_value = tf_obs[5]
-    rigid_body_parameters.alpha1.observation_weight = weights_tf_obs_residuals[0]
-    rigid_body_parameters.alpha2.observation_weight = weights_tf_obs_residuals[1]
-    rigid_body_parameters.alpha3.observation_weight = weights_tf_obs_residuals[2]
-    rigid_body_parameters.tx.observation_weight = weights_tf_obs_residuals[3]
-    rigid_body_parameters.ty.observation_weight = weights_tf_obs_residuals[4]
-    rigid_body_parameters.tz.observation_weight = weights_tf_obs_residuals[5]
-    rigid_body_parameters.alpha1.scale_for_report = 180 / np.pi
-    rigid_body_parameters.alpha2.scale_for_report = 180 / np.pi
-    rigid_body_parameters.alpha3.scale_for_report = 180 / np.pi
-
-    residual_distances = []
-
-    print("Start iterations ...")
-    for i in range(0, max_iterations):
-
-        initial_distances = matching(pcfix, pcmov)
-
-        initial_distances = reject(pcfix, pcmov, min_planarity, initial_distances)
-
-        # Estimate weight of distances if value is < 0
-        if weights_distance_residuals < 0:
-            weights_distance_residuals = 1 / (np.std(initial_distances) ** 2)
-
-        dH, residuals, optim_result = estimate_rigid_body_transformation(
-            pcfix.X[pcfix.sel, :],
-            pcfix.N[pcfix.sel, :],
-            pcmov.X[pcmov.sel, :],
-            weights_distance_residuals,
-            tf_obs,
-            weights_tf_obs_residuals,
-        )
-
-        residual_distances.append(residuals)
-
-        pcmov.transform(dH)
-
-        H = dH @ H
-
-        update_rigid_body_parameters(rigid_body_parameters, H, optim_result)
-
-        pcfix.sel = sel_orig
-
-        if i > 0:
-            if check_convergence_criteria(
-                residual_distances[i], residual_distances[i - 1], min_change
-            ):
-                print("Convergence criteria fulfilled -> stop iteration!")
-                break
-
-        if i == 0:
-            print(
-                f"{'iteration':>9s} | "
-                f"{'correspondences':>15s} | "
-                f"{'mean(residuals)':>15s} | "
-                f"{'std(residuals)':>15s}"
+            optim = optimization.SimpleICPOptimization(
+                cp,
+                distance_weights,
+                rbp_initial_values,
+                rbp_observed_values,
+                rbp_observation_weights,
             )
-            print(
-                f"{0:9d} | "
-                f"{len(initial_distances):15d} | "
-                f"{np.mean(initial_distances):15.4f} | "
-                f"{np.std(initial_distances):15.4f}"
+
+            distance_residuals_new = optim.estimate_parameters()
+            rbp = optim.rbp
+
+            rbp_estimated_values = rbp.get_parameter_attributes_as_list(
+                "estimated_value"
             )
+            H = rbp.H
+
+            distance_residuals.append(distance_residuals_new)
+
+            self.pc1["selected"] = selected_orig  # restore selected points
+
+            if it > 0:
+                if self.__check_convergence_criteria(
+                    distance_residuals[it], distance_residuals[it - 1], min_change
+                ):
+                    optim.estimate_parameter_uncertainties()
+                    print("Convergence criteria fulfilled -> stop iteration!")
+                    break
+
+            if it == 0:
+                print(
+                    f"{'iteration':>9s} | "
+                    f"{'correspondences':>15s} | "
+                    f"{'mean(residuals)':>15s} | "
+                    f"{'std(residuals)':>15s}"
+                )
+                print(
+                    f"{'orig:0':>9s} | "
+                    f"{len(initial_distances):15d} | "
+                    f"{np.mean(initial_distances):15.4f} | "
+                    f"{np.std(initial_distances):15.4f}"
+                )
+            print(
+                f"{it+1:9d} | "
+                f"{len(distance_residuals[it]):15d} | "
+                f"{np.mean(distance_residuals[it]):15.4f} | "
+                f"{np.std(distance_residuals[it]):15.4f}"
+            )
+
+        print("Estimated transformation matrix H:")
+        print(f"[{H[0, 0]:12.6f} {H[0, 1]:12.6f} {H[0, 2]:12.6f} {H[0, 3]:12.6f}]")
+        print(f"[{H[1, 0]:12.6f} {H[1, 1]:12.6f} {H[1, 2]:12.6f} {H[1, 3]:12.6f}]")
+        print(f"[{H[2, 0]:12.6f} {H[2, 1]:12.6f} {H[2, 2]:12.6f} {H[2, 3]:12.6f}]")
+        print(f"[{H[3, 0]:12.6f} {H[3, 1]:12.6f} {H[3, 2]:12.6f} {H[3, 3]:12.6f}]")
+
         print(
-            f"{i+1:9d} | "
-            f"{len(residual_distances[i]):15d} | "
-            f"{np.mean(residual_distances[i]):15.4f} | "
-            f"{np.std(residual_distances[i]):15.4f}"
+            "... which corresponds to the following rigid body transformation parameters:"
+        )
+        print(
+            f"{'parameter':>9s} | "
+            f"{'est.value':>15s} | "
+            f"{'est.uncertainty':>15s} | "
+            f"{'obs.value':>15s} | "
+            f"{'obs.weight':>15s}"
+        )
+        for parameter in fields(rbp):
+            print(
+                f"{parameter.name:>9s} | "
+                f"{getattr(rbp, parameter.name).estimated_value_scaled:15.6f} | "
+                f"{getattr(rbp, parameter.name).estimated_uncertainty_scaled:15.6f} | "
+                f"{getattr(rbp, parameter.name).observed_value_scaled:15.6f} | "
+                f"{getattr(rbp, parameter.name).observation_weight:15.6f}"
+            )
+
+        print(
+            "(Unit of est.value, est.uncertainty, and obs.value for alpha1/2/3 is degree)"
         )
 
-    print("Estimated transformation matrix H:")
-    print(f"[{H[0, 0]:12.6f} {H[0, 1]:12.6f} {H[0, 2]:12.6f} {H[0, 3]:12.6f}]")
-    print(f"[{H[1, 0]:12.6f} {H[1, 1]:12.6f} {H[1, 2]:12.6f} {H[1, 3]:12.6f}]")
-    print(f"[{H[2, 0]:12.6f} {H[2, 1]:12.6f} {H[2, 2]:12.6f} {H[2, 3]:12.6f}]")
-    print(f"[{H[3, 0]:12.6f} {H[3, 1]:12.6f} {H[3, 2]:12.6f} {H[3, 3]:12.6f}]")
+        # Apply final transformation
+        self.pc2.transform_by_H(H)
 
-    # TODO tf_obs does not make too much sense as we estimate always dH only
-    # TODO report final global transformation parameters (instead of params from last iteration)
+        print(f"Finished in {time.time() - start_time:.3f} seconds!")
 
-    print(
-        "... which corresponds to the following rigid body transformation parameters:"
-    )
-    print(
-        f"{'parameter':>9s} | "
-        f"{'est. value':>16s} | "
-        f"{'est. uncertainty':>16s} | "
-        f"{'obs. value':>16s} | "
-        f"{'obs. weight':>16s}"
-    )
-    print(
-        f"{'alpha1':>9s} | "
-        f"{rigid_body_parameters.alpha1.estimated_value*rigid_body_parameters.alpha1.scale_for_report:16.6f} | "
-        f"{rigid_body_parameters.alpha1.estimated_uncertainty*rigid_body_parameters.alpha1.scale_for_report:16.6f} | "
-        f"{rigid_body_parameters.alpha1.observed_value*rigid_body_parameters.alpha1.scale_for_report:16.6f} | "
-        f"{rigid_body_parameters.alpha1.observation_weight:16.6f}"
-    )
-    print(
-        f"{'alpha2':>9s} | "
-        f"{rigid_body_parameters.alpha2.estimated_value*rigid_body_parameters.alpha2.scale_for_report:16.6f} | "
-        f"{rigid_body_parameters.alpha2.estimated_uncertainty*rigid_body_parameters.alpha2.scale_for_report:16.6f} | "
-        f"{rigid_body_parameters.alpha2.observed_value*rigid_body_parameters.alpha2.scale_for_report:16.6f} | "
-        f"{rigid_body_parameters.alpha2.observation_weight:16.6f}"
-    )
-    print(
-        f"{'alpha3':>9s} | "
-        f"{rigid_body_parameters.alpha3.estimated_value*rigid_body_parameters.alpha3.scale_for_report:16.6f} | "
-        f"{rigid_body_parameters.alpha3.estimated_uncertainty*rigid_body_parameters.alpha3.scale_for_report:16.6f} | "
-        f"{rigid_body_parameters.alpha3.observed_value*rigid_body_parameters.alpha3.scale_for_report:16.6f} | "
-        f"{rigid_body_parameters.alpha3.observation_weight:16.6f}"
-    )
-    print(
-        f"{'tx':>9s} | "
-        f"{rigid_body_parameters.tx.estimated_value:16.6f} | "
-        f"{rigid_body_parameters.tx.estimated_uncertainty:16.6f} | "
-        f"{rigid_body_parameters.tx.observed_value:16.6f} | "
-        f"{rigid_body_parameters.tx.observation_weight:16.6f}"
-    )
-    print(
-        f"{'ty':>9s} | "
-        f"{rigid_body_parameters.ty.estimated_value:16.6f} | "
-        f"{rigid_body_parameters.ty.estimated_uncertainty:16.6f} | "
-        f"{rigid_body_parameters.ty.observed_value:16.6f} | "
-        f"{rigid_body_parameters.ty.observation_weight:16.6f}"
-    )
-    print(
-        f"{'tz':>9s} | "
-        f"{rigid_body_parameters.tz.estimated_value:16.6f} | "
-        f"{rigid_body_parameters.tz.estimated_uncertainty:16.6f} | "
-        f"{rigid_body_parameters.tz.observed_value:16.6f} | "
-        f"{rigid_body_parameters.tz.observation_weight:16.6f}"
-    )
+        return H, self.pc2.X
 
-    print(
-        "(Unit of est. value, est. uncertainty, and obs.value for alpha1/2/3 is degree)"
-    )
+    @staticmethod
+    def __check_arguments(
+        distance_weights, rbp_observed_values, rbp_observation_weights
+    ):
+        """Some (i.e. not exhaustive) checks of the arguments passed to the constructor method."""
+        if distance_weights is not None:
+            if distance_weights <= 0:
+                raise SimpleICPException("distance_weights must be > 0.")
 
-    print(f"Finished in {time.time() - start_time:.3f} seconds!")
+        if not len(rbp_observed_values) == 6:
+            raise SimpleICPException(
+                "rbp_observed_values must have exactly 6 elements."
+            )
 
-    return H, pcmov.X
+        if not len(rbp_observation_weights) == 6:
+            raise SimpleICPException(
+                "rbp_observation_weights must have exactly 6 elements."
+            )
+
+        if not all([w >= 0 for w in rbp_observation_weights]):
+            raise SimpleICPException(
+                "All elements of rbp_observation_weights must be >= 0."
+            )
+
+        if not any(np.isfinite(rbp_observation_weights)):
+            raise SimpleICPException(
+                "At least one element in rbp_observation_weights must be finite."
+            )
+
+    @staticmethod
+    def __check_convergence_criteria(
+        distance_residuals_new: np.array,
+        distance_residuals_old: np.array,
+        min_change: float,
+    ) -> bool:
+        """Check if the convergence criteria is met."""
+
+        def change(new, old):
+            return np.abs((new - old) / old * 100)
+
+        change_of_mean = change(
+            np.mean(distance_residuals_new), np.mean(distance_residuals_old)
+        )
+        change_of_std = change(
+            np.std(distance_residuals_new), np.std(distance_residuals_old)
+        )
+
+        return (
+            True
+            if change_of_mean < min_change and change_of_std < min_change
+            else False
+        )
 
 
-def update_rigid_body_parameters(rigid_body_parameters, H, optim_result):
-    (
-        rigid_body_parameters.alpha1.estimated_value,
-        rigid_body_parameters.alpha2.estimated_value,
-        rigid_body_parameters.alpha3.estimated_value,
-    ) = utils.rotation_matrix_to_euler_angles(H[0:3, 0:3])
-
-    rigid_body_parameters.tx.estimated_value = H[0, 3]
-    rigid_body_parameters.ty.estimated_value = H[1, 3]
-    rigid_body_parameters.tz.estimated_value = H[2, 3]
-
-    # rigid_body_parameters.alpha1.estimated_uncertainty = optim_result.params[
-    #     "alpha1"
-    # ].stderr
-    # rigid_body_parameters.alpha2.estimated_uncertainty = optim_result.params[
-    #     "alpha2"
-    # ].stderr
-    # rigid_body_parameters.alpha3.estimated_uncertainty = optim_result.params[
-    #     "alpha3"
-    # ].stderr
-    # rigid_body_parameters.tx.estimated_uncertainty = optim_result.params["tx"].stderr
-    # rigid_body_parameters.ty.estimated_uncertainty = optim_result.params["ty"].stderr
-    # rigid_body_parameters.tz.estimated_uncertainty = optim_result.params["tz"].stderr
+class SimpleICPException(Exception):
+    """The SimpleICP class raises this when the class is misused."""

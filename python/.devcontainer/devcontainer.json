@@ -34,9 +34,11 @@
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
 		"ms-python.python",
-		"ms-python.vscode-pylance",
+		"visualstudioexptteam.vscodeintellicod",
+		"njpwerner.autodocstring",
 		"gruntfuggly.todo-tree",
-		"streetsidesoftware.code-spell-checker"
+		"streetsidesoftware.code-spell-checker",
+		"yzhang.markdown-all-in-one"
 	],
 
 	// Uncomment when using a ptrace-based debugger like C++, Go, and Rust
