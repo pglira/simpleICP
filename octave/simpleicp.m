@@ -17,7 +17,7 @@ function [H, XmovT] = simpleicp(XFix, XMov, varargin)
     end
   end
 
-  fprintf('Select points for correspondences within overlap area of fixed point cloud ...\n');
+  fprintf('Select points for correspondences in fixed point cloud ...\n');
   pcFix.selectNPoints(p.correspondences);
   selOrig = pcFix.sel;
 
@@ -53,7 +53,7 @@ function [H, XmovT] = simpleicp(XFix, XMov, varargin)
     if i == 1
       fprintf('%9s | %15s | %15s | %15s\n', 'Iteration', 'correspondences', ...
           'mean(residuals)', 'std(residuals)');
-      fprintf('%9d | %15d | %15.4f | %15.4f\n', 0, numel(initialDistances), ...
+      fprintf('%9s | %15d | %15.4f | %15.4f\n', 'orig:0', numel(initialDistances), ...
           mean(initialDistances), std(initialDistances));
     end
     fprintf('%9d | %15d | %15.4f | %15.4f\n', i, numel(residualDistances{i}), ...
