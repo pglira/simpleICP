@@ -238,7 +238,7 @@ function simpleicp(X_fix::Array, X_mov::Array;
             end
         end
 
-        @info "Select points for correspondences within overlap area of fixed point cloud ..."
+        @info "Select points for correspondences in fixed point cloud ..."
         select_n_points!(pcfix, correspondences)
         sel_orig = pcfix.sel
 
@@ -278,7 +278,7 @@ function simpleicp(X_fix::Array, X_mov::Array;
             if i == 1
                 @info @sprintf(" %9s | %15s | %15s | %15s", "Iteration", "correspondences",
                                "mean(residuals)", "std(residuals)")
-                @info @sprintf(" %9d | %15d | %15.4f | %15.4f", 0, length(initial_distances),
+                @info @sprintf(" %9s | %15d | %15.4f | %15.4f", "orig:0", length(initial_distances),
                                mean(initial_distances), std(initial_distances))
             end
             @info @sprintf(" %9d | %15d | %15.4f | %15.4f", i, length(residual_distances[i]),

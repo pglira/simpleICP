@@ -137,31 +137,26 @@ All implementations generate the same screen output. This is an example from the
 
 ```
 $ run_simpleicp.sh
-Processing dataset "Bunny"
+Processing dataset "Dragon"
 Create point cloud objects ...
-Consider partial overlap of point clouds ...
-Select points for correspondences within overlap area of fixed point cloud ...
+Select points for correspondences in fixed point cloud ...
 Estimate normals of selected points ...
 Start iterations ...
 Iteration | correspondences | mean(residuals) |  std(residuals)
-        0 |             961 |         -0.0321 |          0.2494
-        1 |             961 |          0.0027 |          0.1349
-        2 |             904 |         -0.0011 |          0.0540
-        3 |             904 |         -0.0034 |          0.0390
-        4 |             883 |         -0.0021 |          0.0325
-        5 |             877 |         -0.0019 |          0.0284
-        6 |             869 |         -0.0016 |          0.0243
-        7 |             862 |         -0.0013 |          0.0213
-        8 |             857 |         -0.0013 |          0.0191
-        9 |             852 |         -0.0014 |          0.0188
-       10 |             850 |         -0.0015 |          0.0186
+   orig:0 |             767 |          0.0001 |          0.3203
+        1 |             767 |         -0.0061 |          0.2531
+        2 |             773 |         -0.0035 |          0.1669
+        3 |             771 |         -0.0008 |          0.0835
+        4 |             741 |         -0.0006 |          0.0196
+        5 |             762 |          0.0000 |          0.0025
+        6 |             775 |          0.0001 |          0.0022
 Convergence criteria fulfilled -> stop iteration!
 Estimated transformation matrix H:
-[    0.990048    -0.172044     0.000977    -0.030468]
-[    0.172035     0.990043    -0.001831    -0.022069]
-[   -0.000834     0.001813     1.000022    -0.001465]
+[    0.998696     0.052621    -0.034179    -0.206737]
+[   -0.052090     0.999028     0.020119    -0.408088]
+[    0.034822    -0.018663     0.999436    -0.593361]
 [    0.000000     0.000000     0.000000     1.000000]
-Finished in 0.131 seconds!
+Finished in 1.729 seconds!
 ```
 
 ## Test data sets

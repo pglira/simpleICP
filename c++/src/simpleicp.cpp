@@ -36,7 +36,7 @@ Eigen::Matrix<double, 4, 4> SimpleICP(const Eigen::MatrixXd &X_fix,
     }
   }
 
-  printf("Select points for correspondences within overlap area of fixed point cloud ...\n");
+  printf("Select points for correspondences in fixed point cloud ...\n");
   pc_fix.SelectNPts(correspondences);
 
   printf("Estimate normals of selected points ...\n");
@@ -85,8 +85,8 @@ Eigen::Matrix<double, 4, 4> SimpleICP(const Eigen::MatrixXd &X_fix,
              "correspondences",
              "mean(residuals)",
              "std(residuals)");
-      printf("%9d | %15d | %15.4f | %15.4f\n",
-             i,
+      printf("%9s | %15d | %15.4f | %15.4f\n",
+             "orig:0",
              int(initial_dists.size()),
              initial_dists.mean(),
              Std(initial_dists));
