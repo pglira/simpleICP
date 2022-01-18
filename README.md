@@ -166,7 +166,7 @@ Finished in 0.131 seconds!
 
 ## Test data sets
 
-The test data sets are included in the [data](data) subfolder. An example call for each language can be found in the ``run_simpleicp.*`` files, e.g. [run_simpleicp.jl](julia/simpleicp/tests/run_simpleicp.jl) for the julia version.
+The test data sets are included in the [data](data) subfolder. An example call for each language can be found in the ``run_simpleicp.*`` files, e.g. [run_simpleicp.jl](julia/simpleicp/run_simpleicp.jl) for the julia version.
 
 | Dataset             |                                                        | pc1 (no_pts)                               | pc2 (no_pts)                               | Overlap         | Source                                                                              |
 | :------------------ | ------------------------------------------------------ | ------------------------------------------ | ------------------------------------------ | --------------- | ----------------------------------------------------------------------------------- |
