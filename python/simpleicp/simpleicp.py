@@ -95,6 +95,11 @@ class SimpleICP:
 
         start_time = time.time()
 
+        # Convert angle valus from degree -> radian
+        rbp_observed_values = np.array(rbp_observed_values)
+        for i in range(3):
+            rbp_observed_values[i] = rbp_observed_values[i]*np.pi/180
+
         if np.isfinite(max_overlap_distance):
 
             print("Consider partial overlap of point clouds ...")
