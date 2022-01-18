@@ -27,7 +27,7 @@ def run_simpleicp(X_fix, X_mov, kwargs):
     # Create simpleICP object, add point clouds, and run algorithm!
     icp = SimpleICP()
     icp.add_point_clouds(pc_fix, pc_mov)
-    _, X_mov_transformed = icp.run(**kwargs)
+    _, X_mov_transformed, _ = icp.run(**kwargs)
 
     return X_mov_transformed
 
@@ -80,8 +80,8 @@ if dataset == "Multisensor" or dataset == "all":
     )
     kwargs = {
         "max_overlap_distance": 1,
-        "rbp_observed_values": (0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        "rbp_observation_weights": (0.0, np.inf, 0.0, 0.0, 0.0, 0.0),
+        "rbp_observed_values": (-0.5, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "rbp_observation_weights": (np.inf, np.inf, 0.0, 0.0, 0.0, 0.0),
     }
     X_mov_transformed = run_simpleicp(X_fix, X_mov, kwargs)
 

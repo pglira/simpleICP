@@ -226,7 +226,7 @@ class SimpleICP:
 
         print(f"Finished in {time.time() - start_time:.3f} seconds!")
 
-        return H, self.pc2.X
+        return H, self.pc2.X, rbp
 
     @staticmethod
     def __check_arguments(
