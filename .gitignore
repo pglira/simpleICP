@@ -10,7 +10,6 @@ julia/check/
 python/simpleicp.egg-info/
 python/dist/
 python/simpleicp/__pycache__/
-README.md
 octave/check/
 octave/octave-workspace
 python/build/
