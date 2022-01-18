@@ -121,7 +121,7 @@ Consequently:
 
 - ``alpha1``: is observed to be 10 degrees with an observation weight of 100.
 
-- ``alpha2``: is not observed since the corresponding weight is zero. However, the observed value is used as initial value for ``alpha1`` in the non-linear least squares optimization.
+- ``alpha2``: is not observed since the corresponding weight is zero. However, the observed value is used as initial value for ``alpha2`` in the non-linear least squares optimization.
 
 - ``alpha3``: is also not observed, but has an initial value of -5 degrees.
 
