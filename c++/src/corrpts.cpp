@@ -25,7 +25,7 @@ void CorrPts::Match()
 void CorrPts::GetPlanarityFromPc1()
 {
   planarity_ = Eigen::VectorXd(idx_pc1_.size());
-  for (int i = 0; i < idx_pc1_.size(); i++)
+  for (uint i = 0; i < idx_pc1_.size(); i++)
   {
     planarity_[i] = pc1_.planarity()[idx_pc1_[i]];
   }
@@ -36,7 +36,7 @@ void CorrPts::ComputeDists()
   dists_ = Eigen::VectorXd(idx_pc1_.size());
   dists_.fill(NAN);
 
-  for (int i = 0; i < idx_pc1_.size(); i++)
+  for (uint i = 0; i < idx_pc1_.size(); i++)
   {
     double x_pc1 = pc1_.X()(idx_pc1_[i], 0);
     double y_pc1 = pc1_.X()(idx_pc1_[i], 1);
@@ -96,7 +96,7 @@ void CorrPts::EstimateRigidBodyTransformation(Eigen::Matrix<double, 4, 4> &H,
   Eigen::MatrixXd A(no_corr_pts, 6);
   Eigen::VectorXd l(no_corr_pts);
 
-  for (int i = 0; i < no_corr_pts; i++)
+  for (uint i = 0; i < no_corr_pts; i++)
   {
     double x_pc1 = pc1_.X()(idx_pc1_[i], 0);
     double y_pc1 = pc1_.X()(idx_pc1_[i], 1);

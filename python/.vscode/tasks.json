@@ -7,6 +7,16 @@
             "label": "build and upload simpleicp package to pypi",
             "type": "shell",
             "command": "rm -rf dist && python setup.py sdist bdist_wheel && twine upload dist/*"
+        },
+        {
+            "label": "run current python file",
+            "type": "shell",
+            "command": "python ${file}"
+        },
+        {
+            "label": "run minimal working example",
+            "type": "shell",
+            "command": "python ${workspaceFolder}/simpleicp/tests/minimal_working_example.py"
         }
     ]
 }

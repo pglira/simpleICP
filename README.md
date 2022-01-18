@@ -6,13 +6,13 @@ This repo contains implementations of a rather simple version of the [Iterative 
 
 Currently, an implementation is available for:
 
-| Language | Code | Main dependencies |
-| --- | --- | --- |
-| C++ | [Link](c++) | [nanoflann](https://github.com/jlblancoc/nanoflann), [Eigen](http://eigen.tuxfamily.org), [cxxopts](https://github.com/jarro2783/cxxopts) |
-| Julia | [Link](julia) | [NearestNeighbors.jl](https://github.com/KristofferC/NearestNeighbors.jl) |
-| Matlab | [Link](matlab) | [Statistics and Machine Learning Toolbox](https://www.mathworks.com/products/statistics.html) |
-| Octave | [Link](octave) | |
-| Python | [Link](python) | [NumPy](https://numpy.org), [SciPy](https://scipy.org) |
+| Language | Code           | Main dependencies                                                                                                                         |
+| -------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| C++      | [Link](c++)    | [nanoflann](https://github.com/jlblancoc/nanoflann), [Eigen](http://eigen.tuxfamily.org), [cxxopts](https://github.com/jarro2783/cxxopts) |
+| Julia    | [Link](julia)  | [NearestNeighbors.jl](https://github.com/KristofferC/NearestNeighbors.jl)                                                                 |
+| Matlab   | [Link](matlab) | [Statistics and Machine Learning Toolbox](https://www.mathworks.com/products/statistics.html)                                             |
+| Octave   | [Link](octave) |                                                                                                                                           |
+| Python   | [Link](python) | [NumPy](https://numpy.org), [SciPy](https://scipy.org)                                                                                    |
 
 I've tried to optimize the readability of the code, i.e. the code structure is as simple as possible and tests are rather rare.
 
@@ -54,6 +54,23 @@ The following basic features are implemented in all languages:
 - The normal vector of the plane (needed to compute the point-to-plane distance) is estimated from the fixed point cloud using a fixed number of neighbors. Default is ``neighbors = 10``.
 - The point clouds must not fully overlap, i.e. a partial overlap of the point cloud is allowed. An example for such a case is the *Bunny* dataset, see [here](#test-data-sets). The initial overlapping area between two point  clouds can be defined by the parameter ``max_overlap_distance``. More specifically, the correspondences are only selected across points of the fixed point cloud for which the initial distance to the nearest neighbor of the movable point cloud is ``<= max_overlap_distance``.
 
+### Extended features
+
+The extended features are currently *not* implemented in all languages. The differences are documented in the following table:
+
+| Feature                               | C++ | Julia | Matlab | Octave | Python |
+| ------------------------------------- | --- | ----- | ------ | ------ | ------ |
+| **a priori observation of transform** | no  | no    | no     | no     | yes    |
+
+Description of extended features:
+
+- **a priori observation of transform**: this is useful in at least three cases:
+  <!-- 1. if the estimation of a subset of the 6 rigid-body transformation parameters is -->
+  <!-- 2. if a subset of the 6 rigid-body transformation parameters ... -->
+  <!-- 3. if a solution from a previous run of the ICP algorithm exists -->
+
+  New arguments are ...
+
 ## Output
 
 All implementations generate the same screen output. This is an example from the C++ version for the *Bunny* dataset:
@@ -61,53 +78,53 @@ All implementations generate the same screen output. This is an example from the
 ```
 $ run_simpleicp.sh
 Processing dataset "Bunny"
-[09:42:37.690] Create point cloud objects ...
-[09:42:37.690] Consider partial overlap of point clouds ...
-[09:42:37.770] Select points for correspondences within overlap area of fixed point cloud ...
-[09:42:37.770] Estimate normals of selected points ...
-[09:42:37.775] Start iterations ...
-[09:42:37.780] Iteration | correspondences | mean(residuals) |  std(residuals)
-[09:42:37.780]         0 |             960 |         -0.0003 |          0.0025
-[09:42:37.780]         1 |             960 |          0.0000 |          0.0013
-[09:42:37.785]         2 |             903 |         -0.0000 |          0.0005
-[09:42:37.790]         3 |             903 |         -0.0000 |          0.0004
-[09:42:37.794]         4 |             883 |         -0.0000 |          0.0003
-[09:42:37.799]         5 |             877 |         -0.0000 |          0.0003
-[09:42:37.803]         6 |             869 |         -0.0000 |          0.0002
-[09:42:37.808]         7 |             860 |         -0.0000 |          0.0002
-[09:42:37.813]         8 |             855 |         -0.0000 |          0.0002
-[09:42:37.818]         9 |             851 |         -0.0000 |          0.0002
-[09:42:37.822]        10 |             849 |         -0.0000 |          0.0002
-[09:42:37.827] Convergence criteria fulfilled -> stop iteration!
-[09:42:37.827] Estimated transformation matrix H:
-[09:42:37.827] [    0.990045    -0.172046     0.000965    -0.000304]
-[09:42:37.827] [    0.172037     0.990039    -0.001838    -0.000220]
-[09:42:37.827] [   -0.000824     0.001815     1.000023    -0.000015]
-[09:42:37.827] [    0.000000     0.000000     0.000000     1.000000]
-[09:42:37.827] Finished in 0.137 seconds!
+Create point cloud objects ...
+Consider partial overlap of point clouds ...
+Select points for correspondences within overlap area of fixed point cloud ...
+Estimate normals of selected points ...
+Start iterations ...
+Iteration | correspondences | mean(residuals) |  std(residuals)
+        0 |             961 |         -0.0321 |          0.2494
+        1 |             961 |          0.0027 |          0.1349
+        2 |             904 |         -0.0011 |          0.0540
+        3 |             904 |         -0.0034 |          0.0390
+        4 |             883 |         -0.0021 |          0.0325
+        5 |             877 |         -0.0019 |          0.0284
+        6 |             869 |         -0.0016 |          0.0243
+        7 |             862 |         -0.0013 |          0.0213
+        8 |             857 |         -0.0013 |          0.0191
+        9 |             852 |         -0.0014 |          0.0188
+       10 |             850 |         -0.0015 |          0.0186
+Convergence criteria fulfilled -> stop iteration!
+Estimated transformation matrix H:
+[    0.990048    -0.172044     0.000977    -0.030468]
+[    0.172035     0.990043    -0.001831    -0.022069]
+[   -0.000834     0.001813     1.000022    -0.001465]
+[    0.000000     0.000000     0.000000     1.000000]
+Finished in 0.131 seconds!
 ```
 
 ## Test data sets
 
 The test data sets are included in the [data](data) subfolder. An example call for each language can be found in the ``run_simpleicp.*`` files, e.g. [run_simpleicp.py](python/simpleicp/tests/run_simpleicp.py) for the python version.
 
-| Dataset | | pc1 (no_pts) | pc2 (no_pts) | Overlap | Source |
-| :--- | --- | --- | --- | --- | --- |
-| *Dragon* | ![Dragon](/data/dragon_small.png) | [pc1](data/dragon1.xyz) (100k) | [pc2](data/dragon2.xyz) (100k) | full overlap | [The Stanford 3D Scanning Repository](http://graphics.stanford.edu/data/3Dscanrep/) |
-| *Airborne Lidar* | ![AirborneLidar](/data/airborne_lidar_small.png) | [pc1](data/airborne_lidar1.xyz) (1340k) | [pc2](data/airborne_lidar2.xyz) (1340k) | full overlap | Airborne Lidar fligth campaign over Austrian Alps |
-| *Terrestrial Lidar* | ![TerrestrialLidar](/data/terrestrial_lidar_small.png) | [pc1](data/terrestrial_lidar1.xyz) (1250k) | [pc2](data/terrestrial_lidar2.xyz) (1250k) | full overlap | Terrestrial Lidar point clouds of a stone block|
-| *Bunny* | ![Bunny](/data/bunny_small.png) | [pc1](data/bunny_part1.xyz) (21k) | [pc2](data/bunny_part2.xyz) (22k) | partial overlap | [The Stanford 3D Scanning Repository](http://graphics.stanford.edu/data/3Dscanrep/) |
+| Dataset             |                                                        | pc1 (no_pts)                               | pc2 (no_pts)                               | Overlap         | Source                                                                              |
+| :------------------ | ------------------------------------------------------ | ------------------------------------------ | ------------------------------------------ | --------------- | ----------------------------------------------------------------------------------- |
+| *Dragon*            | ![Dragon](/data/dragon_small.png)                      | [pc1](data/dragon1.xyz) (100k)             | [pc2](data/dragon2.xyz) (100k)             | full overlap    | [The Stanford 3D Scanning Repository](http://graphics.stanford.edu/data/3Dscanrep/) |
+| *Airborne Lidar*    | ![AirborneLidar](/data/airborne_lidar_small.png)       | [pc1](data/airborne_lidar1.xyz) (1340k)    | [pc2](data/airborne_lidar2.xyz) (1340k)    | full overlap    | Airborne Lidar fligth campaign over Austrian Alps                                   |
+| *Terrestrial Lidar* | ![TerrestrialLidar](/data/terrestrial_lidar_small.png) | [pc1](data/terrestrial_lidar1.xyz) (1250k) | [pc2](data/terrestrial_lidar2.xyz) (1250k) | full overlap    | Terrestrial Lidar point clouds of a stone block                                     |
+| *Bunny*             | ![Bunny](/data/bunny_small.png)                        | [pc1](data/bunny_part1.xyz) (21k)          | [pc2](data/bunny_part2.xyz) (22k)          | partial overlap | [The Stanford 3D Scanning Repository](http://graphics.stanford.edu/data/3Dscanrep/) |
 
 ### Benchmark
 
 These are the runtimes on my PC for the data sets above:
 
-| Dataset             | C++   | Julia | Matlab | Octave* | Python |
-| :--- | ---: | ---: | ---: | ---: | ---: |
-| *Dragon*            | 0.16s | 3.99s |  1.34s | 95.7s   | 0.89s  |
-| *Airborne Lidar*    | 3.98s | 5.38s | 15.08s | -       | 5.45s  |
-| *Terrestrial Lidar* | 3.62s | 5.22s | 13.24s | -       | 5.68s  |
-| *Bunny*             | 0.13s | 0.38s |  0.37s | 72.8s   | 0.80s  |
+| Dataset             |   C++ | Julia | Matlab | Octave* | Python |
+| :------------------ | ----: | ----: | -----: | ------: | -----: |
+| *Dragon*            | 0.16s | 3.99s |  1.34s |   95.7s |  0.89s |
+| *Airborne Lidar*    | 3.98s | 5.38s | 15.08s |       - |  5.45s |
+| *Terrestrial Lidar* | 3.62s | 5.22s | 13.24s |       - |  5.68s |
+| *Bunny*             | 0.13s | 0.38s |  0.37s |   72.8s |  0.80s |
 
 For all versions the same input parameters (``correspondences``, ``neighbors``, ...) are used.
 

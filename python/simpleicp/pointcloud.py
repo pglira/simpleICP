@@ -2,129 +2,219 @@
 PointCloud class.
 """
 
+from typing import List
+
 import numpy as np
+import pandas as pd
 from scipy import spatial
 
+from . import mathutils
 
-class PointCloud:
-    """Class for working with point cloud data."""
 
-    def __init__(self, x: np.array, y: np.array, z: np.array):
-        self.x = x
-        self.y = y
-        self.z = z
+class PointCloud(pd.DataFrame):
+    """Class for working with point cloud data.
 
-        self.nx = None
-        self.ny = None
-        self.nz = None
-        self.planarity = None
+    Dev notes:
+        - The PointCloud class is a child class of pandas.DataFrame.
+        - All attributes which should not be changed outside this class are declared as private,
+        e.g. self._num_points. To access these attributes outside this class, getter methods are
+        defined, e.g. self.num_points.
+    """
 
-        self.no_points = len(x)
-        self.sel = np.arange(0, len(x), 1)
+    def __init__(self, *args, **kwargs) -> None:
+        """Constructor method.
 
-    def select_in_range(self, X: np.array, max_range: float):
-        """Select points within range of points X."""
+        The PointCloud class is a child class of pandas.DataFrame. Thus, when creating an object
+        all arguments are passes to the pandas.DataFrame constructor:
+        https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html
 
-        assert np.shape(X)[1] == 3, "X must have 3 columns!"
+        Note that the created DataFrame must contain the columns "x", "y", and "z" for the
+        coordinates of the points.
+
+        An additional column "selected" of dtype bool is automatically added if missing. It is used
+        to mark a selected subset of points.
+        """
+        super().__init__(*args, **kwargs)
+
+        for coordinate in ("x", "y", "z"):
+            if coordinate not in self:
+                raise PointCloudException(
+                    f'Column "{coordinate}" is missing in DataFrame.'
+                )
+
+        self._num_points = len(self)
+
+        if "selected" not in self:
+            self["selected"] = [True] * self._num_points
+
+    @property
+    def x(self) -> np.array:
+        """Returns x coordinates of all points as 1-dim numpy array."""
+        return self["x"].to_numpy()
+
+    @property
+    def x_selected(self) -> np.array:
+        """Returns x coordinates of selected points as 1-dim numpy array."""
+        return self.loc[self["selected"], "x"].to_numpy()
+
+    @property
+    def y(self) -> np.array:
+        """Returns y coordinates of all points as 1-dim numpy array."""
+        return self["y"].to_numpy()
+
+    @property
+    def y_selected(self) -> np.array:
+        """Returns y coordinates of selected points as 1-dim numpy array."""
+        return self.loc[self["selected"], "y"].to_numpy()
+
+    @property
+    def z(self) -> np.array:
+        """Returns z coordinates of all points as 1-dim numpy array."""
+        return self["z"].to_numpy()
+
+    @property
+    def z_selected(self) -> np.array:
+        """Returns z coordinates of selected points as 1-dim numpy array."""
+        return self.loc[self["selected"], "z"].to_numpy()
+
+    @property
+    def X(self) -> np.array:
+        """Returns x,y,z coordinates of all points as numpy array of shape (n,3)."""
+        return self[["x", "y", "z"]].to_numpy()
+
+    @property
+    def X_selected(self) -> np.array:
+        """Returns x,y,z coordinates of selected points as numpy array of shape (n,3)."""
+        return self.loc[self["selected"], ["x", "y", "z"]].to_numpy()
+
+    @property
+    def idx_selected(self) -> np.array:
+        """Returns indices of selected points as 1-dim numpy array."""
+        return np.where(self["selected"])[0]
+
+    @idx_selected.setter
+    def idx_selected(self, idx_selected: List[int]) -> None:
+        """Set indices of selected points."""
+        self.unselect_all_points()
+        self.loc[idx_selected, "selected"] = True
+
+    @property
+    def num_points(self) -> int:
+        """Returns total number of points."""
+        return self._num_points
+
+    @property
+    def num_selected_points(self) -> int:
+        """Returns number of selected points."""
+        return sum(self["selected"])
+
+    def select_all_points(self) -> None:
+        """Select all points."""
+        self["selected"].values[:] = True
+
+    def unselect_all_points(self) -> None:
+        """Unselect all points."""
+        self["selected"].values[:] = False
+
+    def select_by_indices(self, indices: List[int]) -> None:
+        """Select points by a list of indices.
+
+        Note that this method selects a subset of the currently selected points. I.e., if a point
+        is unselected but its index is contained in idx_selected, it remains unselected. To avoid
+        this, call select_all_points() beforehand.
+
+        Args:
+            indices (List[int]): List of indices to select.
+        """
+        self.idx_selected = np.intersect1d(self.idx_selected, indices)
+
+    def select_n_points(self, n: int) -> None:
+        """Select n points.
+
+        Note that this method selects a subset of the currently selected points. Points are selected
+        equidistantly accross the indices of the currently selected points.
+
+        Args:
+            n (int): Number of points to be selected.
+        """
+        if self.num_selected_points > n:
+            idx_subset_n_points = np.round(
+                np.linspace(0, self.num_selected_points - 1, n)
+            ).astype(int)
+            idx_selected_new = self.idx_selected[idx_subset_n_points]
+            self.unselect_all_points()
+            self.loc[idx_selected_new, "selected"] = True
+
+    def select_in_range(self, X: np.array, max_range: float) -> None:
+        """Select points within range of points X.
+
+        Note that this method selects a subset of the currently selected points.
+
+        Args:
+            X (np.array): Points of shape (n,3).
+            max_range (float): Maximum range from points X.
+        """
+        if np.shape(X)[1] != 3:
+            raise PointCloudException("X must have 3 columns!")
 
         kdtree = spatial.cKDTree(X)
 
         distances, _ = kdtree.query(
-            self.X_sel, k=1, p=2, distance_upper_bound=max_range, workers=-1
+            self.X_selected, k=1, p=2, distance_upper_bound=max_range, workers=-1
         )
 
         keep = np.isfinite(distances)  # distances > max_range are infinite
 
-        self.sel = self.sel[keep]
+        idx_selected_new = self.idx_selected[keep]
+        self.unselect_all_points()
+        self.loc[idx_selected_new, "selected"] = True
 
-    def select_n_points(self, n: int):
-        """Select n points equidistantly."""
+    def estimate_normals(self, neighbors: int) -> None:
+        """Estimate normal vectors for selected points from its neighborhood.
 
-        if self.no_selected_points > n:
-            idx = np.round(np.linspace(0, self.no_selected_points - 1, n)).astype(int)
-            self.sel = self.sel[idx]
-
-    def estimate_normals(self, neighbors: int):
-        """Estimate normal vectors for selected points from its neighborhood."""
-
-        self.nx = np.full(self.no_points, np.nan)
-        self.ny = np.full(self.no_points, np.nan)
-        self.nz = np.full(self.no_points, np.nan)
-        self.planarity = np.full(self.no_points, np.nan)
+        Args:
+            neighbors (int): Number of nearest neighbors to use for normal vector estimation.
+        """
+        # Initialize point attributes
+        nx = np.full((self._num_points,), np.nan, dtype=np.float32)
+        ny = np.full((self._num_points,), np.nan, dtype=np.float32)
+        nz = np.full((self._num_points,), np.nan, dtype=np.float32)
+        planarity = np.full((self._num_points,), np.nan, dtype=np.float32)
 
         kdtree = spatial.cKDTree(self.X)
-        _, idxNN_all_qp = kdtree.query(self.X_sel, k=neighbors, p=2, workers=-1)
+        _, idxNN_all_qp = kdtree.query(self.X_selected, k=neighbors, p=2, workers=-1)
 
         for (i, idxNN) in enumerate(idxNN_all_qp):
-            selected_points = np.column_stack(
-                (self.x[idxNN], self.y[idxNN], self.z[idxNN])
-            )
+            selected_points = self.X[idxNN, :]
             C = np.cov(selected_points.T, bias=False)
             eig_vals, eig_vecs = np.linalg.eig(C)
             idx_sort = eig_vals.argsort()[::-1]  # sort from large to small
             eig_vals = eig_vals[idx_sort]
             eig_vecs = eig_vecs[:, idx_sort]
-            self.nx[self.sel[i]] = eig_vecs[0, 2]
-            self.ny[self.sel[i]] = eig_vecs[1, 2]
-            self.nz[self.sel[i]] = eig_vecs[2, 2]
-            self.planarity[self.sel[i]] = (eig_vals[1] - eig_vals[2]) / eig_vals[0]
+            nx[self.idx_selected[i]] = eig_vecs[0, 2]
+            ny[self.idx_selected[i]] = eig_vecs[1, 2]
+            nz[self.idx_selected[i]] = eig_vecs[2, 2]
+            planarity[self.idx_selected[i]] = (eig_vals[1] - eig_vals[2]) / eig_vals[0]
 
-    def transform(self, H: np.array):
-        """Transform point cloud by given homogeneous transformation matrix H."""
+        self["nx"] = pd.arrays.SparseArray(nx)
+        self["ny"] = pd.arrays.SparseArray(ny)
+        self["nz"] = pd.arrays.SparseArray(nz)
+        self["planarity"] = pd.arrays.SparseArray(planarity)
 
-        XInH = PointCloud.euler_coord_to_homogeneous_coord(self.X)
-        XOutH = np.transpose(H @ XInH.T)
-        XOut = PointCloud.homogeneous_coord_to_euler_coord(XOutH)
+    def transform_by_H(self, H: np.array) -> None:
+        """Transform points by applying a homogeneous transformation matrix H.
 
-        self.x = XOut[:, 0]
-        self.y = XOut[:, 1]
-        self.z = XOut[:, 2]
+        Args:
+            H (np.array): Homogenous transformation matrix H of shape (4,4).
+        """
+        Xh = mathutils.euler_coord_to_homogeneous_coord(self.X)
+        Xh = np.transpose(H @ Xh.T)  # transform in-place to save memory
+        Xe = mathutils.homogeneous_coord_to_euler_coord(Xh)
 
-    @property
-    def x_sel(self) -> np.array:
-        """Returns x coordinates of selected points."""
-        return self.x[self.sel]
+        self["x"] = Xe[:, 0]
+        self["y"] = Xe[:, 1]
+        self["z"] = Xe[:, 2]
 
-    @property
-    def y_sel(self) -> np.array:
-        """Returns y coordinates of selected points."""
-        return self.y[self.sel]
 
-    @property
-    def z_sel(self) -> np.array:
-        """Returns z coordinates of selected points."""
-        return self.z[self.sel]
-
-    @property
-    def X(self) -> np.array:
-        """Returns n-by-3 matrix of all points."""
-        return np.column_stack((self.x, self.y, self.z))
-
-    @property
-    def X_sel(self) -> np.array:
-        """Returns n-by-3 matrix of selected points."""
-        return np.column_stack((self.x[self.sel], self.y[self.sel], self.z[self.sel]))
-
-    @property
-    def no_selected_points(self) -> int:
-        """Returns number of selected points."""
-        return len(self.sel)
-
-    @staticmethod
-    def euler_coord_to_homogeneous_coord(XE: np.array):
-        """Convert Euler coordinates to homogeneous coordinates."""
-
-        no_points = np.shape(XE)[0]
-        XH = np.column_stack((XE, np.ones(no_points)))
-
-        return XH
-
-    @staticmethod
-    def homogeneous_coord_to_euler_coord(XH: np.array):
-        """Convert homogeneous coordinates to Euler coordinates."""
-
-        XE = np.column_stack(
-            (XH[:, 0] / XH[:, 3], XH[:, 1] / XH[:, 3], XH[:, 2] / XH[:, 3])
-        )
-
-        return XE
+class PointCloudException(Exception):
+    """The PointCloud class raises this when the class is misused."""
