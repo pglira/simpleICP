@@ -12,7 +12,7 @@ Currently, an implementation is available for:
 | Julia    | [Link](julia)  | [NearestNeighbors.jl](https://github.com/KristofferC/NearestNeighbors.jl)                                                                 |
 | Matlab   | [Link](matlab) | [Statistics and Machine Learning Toolbox](https://www.mathworks.com/products/statistics.html)                                             |
 | Octave   | [Link](octave) |                                                                                                                                           |
-| Python   | [Link](python) | [NumPy](https://numpy.org), [SciPy](https://scipy.org)                                                                                    |
+| Python   | [Link](python) | [NumPy](https://numpy.org), [SciPy](https://scipy.org), [lmfit](https://lmfit.github.io/lmfit-py/), [pandas](https://pandas.pydata.org)   |
 
 I've tried to optimize the readability of the code, i.e. the code structure is as simple as possible and tests are rather rare.
 
@@ -58,18 +58,78 @@ The following basic features are implemented in all languages:
 
 The extended features are currently *not* implemented in all languages. The differences are documented in the following table:
 
-| Feature                               | C++ | Julia | Matlab | Octave | Python |
-| ------------------------------------- | --- | ----- | ------ | ------ | ------ |
-| **a priori observation of transform** | no  | no    | no     | no     | yes    |
+| Feature                                                 | C++ | Julia | Matlab | Octave | Python |
+| ------------------------------------------------------- | --- | ----- | ------ | ------ | ------ |
+| **observation of rigid-body transformation parameters** | no  | no    | no     | no     | yes    |
 
-Description of extended features:
+#### Extended feature: **observation of rigid-body transformation parameters**
 
-- **a priori observation of transform**: this is useful in at least three cases:
-  <!-- 1. if the estimation of a subset of the 6 rigid-body transformation parameters is -->
-  <!-- 2. if a subset of the 6 rigid-body transformation parameters ... -->
-  <!-- 3. if a solution from a previous run of the ICP algorithm exists -->
+This is useful in at least these cases:
 
-  New arguments are ...
+1. If only a subset of the 6 rigid-body transformation parameters should be estimated. This can be accomplished by setting the weight of individual parameters to infinite, see example below.
+
+2. If all or a subset of the 6 rigid-body transformation parameters have been directly observed in any other way, e.g. by means of a manual measurement.
+
+3. If estimates for the rigid-body transformation parameters exist, e.g. from a previous run of simpleICP. In this case the observation weight should be set (according to the theory of least squares adjustments) to ``w = 1/observation_error^2`` whereby the ``observation_error`` is defined as ``std(observation_value)``. The observation error of all parameters is reported by simpleICP as "est.uncertainty" in the logging output.
+
+This feature introduces two new parameters: ``rbp_observed_values`` and ``rbp_observation_weights``. Both parameters have exactly 6 elements which correspond to the rigid-body transformation parameters in the following order:
+
+1. ``alpha1``: rotation angle around the x-axis
+2. ``alpha2``: rotation angle around the y-axis
+3. ``alpha3``: rotation angle around the z-axis
+4. ``tx``: x component of translation vector
+5. ``ty``: y component of translation vector
+6. ``tz``: z component of translation vector
+
+The rigid-body transformation is defined in non-homogeneous coordinates as follows:
+
+```
+Xt = RX + t
+```
+
+where ``X`` and ``Xt`` are the original and transformed coordinates of the movable point cloud, resp., ``t`` is the translation vector, and ``R`` the rotation matrix. ``R`` is thereby defined as:
+
+```
+R = [ca2*ca3               -ca2*sa3                sa2    ]
+    [ca1*sa3+sa1*sa2*ca3    ca1*ca3-sa1*sa2*sa3   -sa1*ca2]
+    [sa1*sa3-ca1*sa2*ca3    sa1*ca3+ca1*sa2*sa3    ca1*ca2]
+```
+
+with the substitutions:
+
+```
+sa1 =: sin(alpha1), ca1 := cos(alpha1)
+sa2 =: sin(alpha2), ca2 := cos(alpha2)
+sa3 =: sin(alpha3), ca3 := cos(alpha3)
+```
+
+The two parameters ``rbp_observed_values`` and ``rbp_observation_weights`` can be used to introduce an additional observation to the least squares optimization for each transformation parameter:
+
+```
+residual = observation_weight * (estimated_value - observed_value)
+```
+
+An **example** which demonstrates the most important combinations:
+
+```python
+# parameters:              alpha1   alpha2   alpha3   tx      ty     tz
+rbp_observed_values =     (0.0      -5.0     10.0     0.20   -0.15   0.0)
+rbp_observation_weights = (0.0       0.0     100.0    40.0    40.0   inf)
+```
+
+Consequently:
+
+- ``alpha1``: is not observed since the corresponding weight is zero. However, the observed value is used as initial value for ``alpha1`` in the non-linear least squares optimization.
+
+- ``alpha2``: is also not observed, but has an initial value of -5 degrees.
+
+- ``alpha3``: is observed to be 10 degrees with an observation weight of 100.
+
+- ``tx``: is observed to be 0.20 with an observation weight of 40.
+
+- ``ty``: is observed to be -0.15 with an observation weight of 40.
+
+- ``tz``: is observed to be 0 with an infinite observation weight, i.e. this parameter becomes a constant and is fixed to be exactly the observation value. Thus, in this case only 5 (out of 6) rigid-body transformation parameters are estimated.
 
 ## Output
 
@@ -121,10 +181,10 @@ These are the runtimes on my PC for the data sets above:
 
 | Dataset             |   C++ | Julia | Matlab | Octave* | Python |
 | :------------------ | ----: | ----: | -----: | ------: | -----: |
-| *Dragon*            | 0.16s | 3.99s |  1.34s |   95.7s |  0.89s |
-| *Airborne Lidar*    | 3.98s | 5.38s | 15.08s |       - |  5.45s |
-| *Terrestrial Lidar* | 3.62s | 5.22s | 13.24s |       - |  5.68s |
-| *Bunny*             | 0.13s | 0.38s |  0.37s |   72.8s |  0.80s |
+| *Dragon*            | 0.16s | 3.99s |  1.34s |   95.7s |  4.51s |
+| *Airborne Lidar*    | 3.98s | 5.38s | 15.08s |       - | 16.49s |
+| *Terrestrial Lidar* | 3.62s | 5.22s | 13.24s |       - | 14.45s |
+| *Bunny*             | 0.13s | 0.38s |  0.37s |   72.8s |  4.20s |
 
 For all versions the same input parameters (``correspondences``, ``neighbors``, ...) are used.
 

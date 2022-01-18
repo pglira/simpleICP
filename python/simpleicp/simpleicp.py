@@ -7,6 +7,8 @@ Dev notes:
     parameter and return values description. For the rest single-line docstrings suffice.
 """
 
+# TODO Rename rbp (rigid-body parameters) to rbtp (rigid-body transformation parameters)
+
 import time
 from dataclasses import fields
 from typing import Optional, Tuple
@@ -35,7 +37,7 @@ class SimpleICP:
         Args:
             pc_fix (pointcloud.PointCloud): Fixed point cloud.
             pc_mov (pointcloud.PointCloud): Movable point cloud. This point cloud
-                will be shifted and rotated (transformed) by applying a rigid body transformation.
+                will be shifted and rotated (transformed) by applying a rigid-body transformation.
         """
 
         # We pc_fix/pc_mov only for the user interface - internally they are pc1/pc2
@@ -74,19 +76,22 @@ class SimpleICP:
             max_iterations (int, optional): Maximum number of ICP iterations. Defaults to 100.
             distance_weights (Optional[float], optional): Weight factor by which the point-to-plane
                 residuals are multiplied. Set to None for automatic estimation - however, this makes
-                only sense if the rigid body transformation parameters are observed, see the
+                only sense if the rigid-body transformation parameters are observed, see the
                 following arguments. Defaults to 1.
             rbp_observed_values (Tuple[float], optional): Values of direct observation of the rigid
-                body parameters. Defaults to (0.0, 0.0, 0.0, 0.0, 0.0, 0.0).
+                body transformation parameters. Order is alpha1, alpha2, alpha3, tx, ty, tz. Unit of
+                alpha1/2/3: degree. Defaults to (0.0, 0.0, 0.0, 0.0, 0.0, 0.0).
             rbp_observation_weights (Tuple[float], optional): Weight factors with which the
                 residuals of the direct observations are multiplied. The residuals are defined as
-                difference between the estimated rbp and the observed rbp. Defaults to
-                (0.0, 0.0, 0.0, 0.0, 0.0, 0.0).
+                difference between the estimated rbp and the observed rbp. If an observation weight
+                is set to np.inf, this parameter is fixed to the observed value. Order of elements
+                is the same as in rbp_observed_values. Defaults to (0.0, 0.0, 0.0, 0.0, 0.0, 0.0).
 
         Returns:
             Tuple[np.array, np.array]:
                 H: Estimated homogeneous transformation matrix.
                 X_mov_transformed: Points of movable point cloud transformed by H.
+                rbp: Data class containing estimates of the rigid-body transformation parameters.
         """
 
         self.__check_arguments(
@@ -204,7 +209,7 @@ class SimpleICP:
         print(f"[{H[3, 0]:12.6f} {H[3, 1]:12.6f} {H[3, 2]:12.6f} {H[3, 3]:12.6f}]")
 
         print(
-            "... which corresponds to the following rigid body transformation parameters:"
+            "... which corresponds to the following rigid-body transformation parameters:"
         )
         print(
             f"{'parameter':>9s} | "
