@@ -87,7 +87,7 @@ The rigid-body transformation is defined in non-homogeneous coordinates as follo
 Xt = RX + t
 ```
 
-where ``X`` and ``Xt`` are the original and transformed coordinates of the movable point cloud, resp., ``t`` is the translation vector, and ``R`` the rotation matrix. ``R`` is thereby defined as:
+where ``X`` and ``Xt`` are n-by-3 matrices of the original and transformed movable point cloud, resp., ``t`` is the translation vector, and ``R`` the rotation matrix. ``R`` is thereby defined as:
 
 ```
 R = [ca2*ca3               -ca2*sa3                sa2    ]
@@ -98,9 +98,9 @@ R = [ca2*ca3               -ca2*sa3                sa2    ]
 with the substitutions:
 
 ```
-sa1 =: sin(alpha1), ca1 := cos(alpha1)
-sa2 =: sin(alpha2), ca2 := cos(alpha2)
-sa3 =: sin(alpha3), ca3 := cos(alpha3)
+sa1 := sin(alpha1), ca1 := cos(alpha1)
+sa2 := sin(alpha2), ca2 := cos(alpha2)
+sa3 := sin(alpha3), ca3 := cos(alpha3)
 ```
 
 The two parameters ``rbp_observed_values`` and ``rbp_observation_weights`` can be used to introduce an additional observation to the least squares optimization for each transformation parameter:
@@ -109,21 +109,21 @@ The two parameters ``rbp_observed_values`` and ``rbp_observation_weights`` can b
 residual = observation_weight * (estimated_value - observed_value)
 ```
 
-An **example** which demonstrates the most important combinations:
+Example which demonstrates the most important combinations:
 
 ```python
 # parameters:              alpha1   alpha2   alpha3   tx      ty     tz
-rbp_observed_values =     (0.0      -5.0     10.0     0.20   -0.15   0.0)
-rbp_observation_weights = (0.0       0.0     100.0    40.0    40.0   inf)
+rbp_observed_values =     (10.0     0.0     -5.0      0.20   -0.15   0.0)
+rbp_observation_weights = (100.0    0.0      0.0      40.0    40.0   inf)
 ```
 
 Consequently:
 
-- ``alpha1``: is not observed since the corresponding weight is zero. However, the observed value is used as initial value for ``alpha1`` in the non-linear least squares optimization.
+- ``alpha1``: is observed to be 10 degrees with an observation weight of 100.
 
-- ``alpha2``: is also not observed, but has an initial value of -5 degrees.
+- ``alpha2``: is not observed since the corresponding weight is zero. However, the observed value is used as initial value for ``alpha1`` in the non-linear least squares optimization.
 
-- ``alpha3``: is observed to be 10 degrees with an observation weight of 100.
+- ``alpha3``: is also not observed, but has an initial value of -5 degrees.
 
 - ``tx``: is observed to be 0.20 with an observation weight of 40.
 
@@ -166,12 +166,12 @@ Finished in 0.131 seconds!
 
 ## Test data sets
 
-The test data sets are included in the [data](data) subfolder. An example call for each language can be found in the ``run_simpleicp.*`` files, e.g. [run_simpleicp.py](python/simpleicp/tests/run_simpleicp.py) for the python version.
+The test data sets are included in the [data](data) subfolder. An example call for each language can be found in the ``run_simpleicp.*`` files, e.g. [run_simpleicp.jl](julia/simpleicp/tests/run_simpleicp.jl) for the julia version.
 
 | Dataset             |                                                        | pc1 (no_pts)                               | pc2 (no_pts)                               | Overlap         | Source                                                                              |
 | :------------------ | ------------------------------------------------------ | ------------------------------------------ | ------------------------------------------ | --------------- | ----------------------------------------------------------------------------------- |
 | *Dragon*            | ![Dragon](/data/dragon_small.png)                      | [pc1](data/dragon1.xyz) (100k)             | [pc2](data/dragon2.xyz) (100k)             | full overlap    | [The Stanford 3D Scanning Repository](http://graphics.stanford.edu/data/3Dscanrep/) |
-| *Airborne Lidar*    | ![AirborneLidar](/data/airborne_lidar_small.png)       | [pc1](data/airborne_lidar1.xyz) (1340k)    | [pc2](data/airborne_lidar2.xyz) (1340k)    | full overlap    | Airborne Lidar fligth campaign over Austrian Alps                                   |
+| *Airborne Lidar*    | ![AirborneLidar](/data/airborne_lidar_small.png)       | [pc1](data/airborne_lidar1.xyz) (1340k)    | [pc2](data/airborne_lidar2.xyz) (1340k)    | full overlap    | Airborne Lidar flight campaign over Austrian Alps                                   |
 | *Terrestrial Lidar* | ![TerrestrialLidar](/data/terrestrial_lidar_small.png) | [pc1](data/terrestrial_lidar1.xyz) (1250k) | [pc2](data/terrestrial_lidar2.xyz) (1250k) | full overlap    | Terrestrial Lidar point clouds of a stone block                                     |
 | *Bunny*             | ![Bunny](/data/bunny_small.png)                        | [pc1](data/bunny_part1.xyz) (21k)          | [pc2](data/bunny_part2.xyz) (22k)          | partial overlap | [The Stanford 3D Scanning Repository](http://graphics.stanford.edu/data/3Dscanrep/) |
 
