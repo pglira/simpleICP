@@ -1,6 +1,8 @@
 """
 Implementation of a rather simple version of the Iterative Closest Point (ICP) algorithm.
+"""
 
+"""
 Dev notes:
     - Define type hints for all parameters and return values.
     - All non-private functions and class methods should have extended docstrings, i.e. including
