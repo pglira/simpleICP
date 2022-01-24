@@ -2,7 +2,7 @@
 PointCloud class.
 """
 
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -21,8 +21,14 @@ class PointCloud(pd.DataFrame):
         defined, e.g. self.num_points.
     """
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args, remapping: Optional[str] = None, **kwargs) -> None:
         """Constructor method.
+
+        Args:
+            remapping (Optional[str], optional): Remapping of column names. Currently only "PDAL"
+            is supported. In this case the column names of PDAL are remapped to the column names
+            used in the PointCloud class, e.g. the column "NormalX" becomes the column "nx".
+            Defaults to None.
 
         The PointCloud class is a child class of pandas.DataFrame. Thus, when creating an object
         all arguments are passes to the pandas.DataFrame constructor:
@@ -35,6 +41,27 @@ class PointCloud(pd.DataFrame):
         to mark a selected subset of points.
         """
         super().__init__(*args, **kwargs)
+
+        if remapping:
+            if remapping == "PDAL":
+                if "X" in self:
+                    self.rename({"X": "x"}, axis="columns", inplace=True)
+                if "Y" in self:
+                    self.rename({"Y": "y"}, axis="columns", inplace=True)
+                if "Z" in self:
+                    self.rename({"Z": "z"}, axis="columns", inplace=True)
+                if "NormalX" in self:
+                    self.rename({"NormalX": "nx"}, axis="columns", inplace=True)
+                if "NormalY" in self:
+                    self.rename({"NormalY": "ny"}, axis="columns", inplace=True)
+                if "NormalZ" in self:
+                    self.rename({"NormalZ": "nz"}, axis="columns", inplace=True)
+                if "Planarity" in self:
+                    self.rename(
+                        {"Planarity": "planarity"}, axis="columns", inplace=True
+                    )
+            else:
+                raise PointCloudException(f'remapping argument "{remapping}" unknown.')
 
         for coordinate in ("x", "y", "z"):
             if coordinate not in self:
