@@ -6,11 +6,17 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wconversion -Wshadow -Wpedantic -fsanitize=u
 set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+find_package(cxxopts REQUIRED)
+find_package(nanoflann REQUIRED)
 
-add_executable(simpleicp
-src/simpleicp-cli.cpp
-src/simpleicp.cpp src/simpleicp.h
-src/pointcloud.cpp src/pointcloud.h
-src/corrpts.cpp src/corrpts.h)
+add_library(simpleicp_lib
+    src/simpleicp.cpp
+    src/pointcloud.cpp
+    src/corrpts.cpp)
+target_link_libraries(simpleicp_lib PUBLIC Eigen3::Eigen cxxopts::cxxopts nanoflann::nanoflann)
+target_include_directories(simpleicp_lib PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
-target_link_libraries(simpleicp Eigen3::Eigen)
+add_executable(simpleicp src/simpleicp-cli.cpp)
+target_link_libraries(simpleicp PRIVATE simpleicp_lib)
+
+
