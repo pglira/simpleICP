@@ -88,6 +88,25 @@ void CorrPts::Reject(const double &min_planarity)
   dists_ = dists_new;
 }
 
+Eigen::Matrix3d EulerAnglesToRotationMatrix(float alpha1, float alpha2, float alpha3)
+{
+  Eigen::Matrix3d R;
+  R <<
+      std::cos(alpha2) * std::cos(alpha3),
+      -std::cos(alpha2) * std::sin(alpha3),
+      std::sin(alpha2),
+
+      std::cos(alpha1) * std::sin(alpha3) + std::sin(alpha1) * std::sin(alpha2) * std::cos(alpha3),
+      std::cos(alpha1) * std::cos(alpha3) - std::sin(alpha1) * std::sin(alpha2) * std::sin(alpha3),
+      -std::sin(alpha1) * std::cos(alpha2),
+
+      std::sin(alpha1) * std::sin(alpha3) - std::cos(alpha1) * std::sin(alpha2) * std::cos(alpha3),
+      std::sin(alpha1) * std::cos(alpha3) + std::cos(alpha1) * std::sin(alpha2) * std::sin(alpha3),
+      std::cos(alpha1) * std::cos(alpha2);
+
+  return R;
+}
+
 void CorrPts::EstimateRigidBodyTransformation(Eigen::Matrix<double, 4, 4> &H,
                                               Eigen::VectorXd &residuals)
 {
@@ -129,25 +148,9 @@ void CorrPts::EstimateRigidBodyTransformation(Eigen::Matrix<double, 4, 4> &H,
   double ty{x(4)};
   double tz{x(5)};
 
-  H(0, 0) = 1;
-  H(0, 1) = -alpha3;
-  H(0, 2) = alpha2;
-  H(0, 3) = tx;
-
-  H(1, 0) = alpha3;
-  H(1, 1) = 1;
-  H(1, 2) = -alpha1;
-  H(1, 3) = ty;
-
-  H(2, 0) = -alpha2;
-  H(2, 1) = alpha1;
-  H(2, 2) = 1;
-  H(2, 3) = tz;
-
-  H(3, 0) = 0;
-  H(3, 1) = 0;
-  H(3, 2) = 0;
-  H(3, 3) = 1;
+  H = Eigen::Matrix4d::Identity();
+  H.topLeftCorner<3, 3>() = EulerAnglesToRotationMatrix(alpha1, alpha2, alpha3);
+  H.topRightCorner<3, 1>() << tx, ty, tz;
 
   residuals = A * x - l;
 }

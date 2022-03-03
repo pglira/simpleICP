@@ -140,11 +140,7 @@ void PointCloud::EstimateNormals(const int &neighbors)
 
 void PointCloud::Transform(Eigen::Matrix<double, 4, 4> &H)
 {
-  Eigen::MatrixXd X_in_H(NoPts(), 4);
-  Eigen::MatrixXd X_out_H(NoPts(), 4);
-  X_in_H << X_, Eigen::VectorXd::Ones(NoPts());
-  X_out_H = H * X_in_H.transpose();
-  X_ << X_out_H.row(0).transpose(), X_out_H.row(1).transpose(), X_out_H.row(2).transpose();
+  X_ = (H * X_.transpose().colwise().homogeneous()).topRows<3>().transpose();
 }
 
 long PointCloud::NoPts() { return X_.rows(); }
