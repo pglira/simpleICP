@@ -8,6 +8,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(cxxopts REQUIRED)
 find_package(nanoflann REQUIRED)
+find_package(Ceres)
 
 add_library(simpleicp_lib
     src/simpleicp.cpp
@@ -15,6 +16,11 @@ add_library(simpleicp_lib
     src/corrpts.cpp)
 target_link_libraries(simpleicp_lib PUBLIC Eigen3::Eigen cxxopts::cxxopts nanoflann::nanoflann)
 target_include_directories(simpleicp_lib PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+
+if (Ceres_FOUND)
+    target_compile_definitions(simpleicp_lib PRIVATE USE_CERES)
+    target_link_libraries(simpleicp_lib PRIVATE Ceres::ceres)
+endif()
 
 add_executable(simpleicp src/simpleicp-cli.cpp)
 target_link_libraries(simpleicp PRIVATE simpleicp_lib)
