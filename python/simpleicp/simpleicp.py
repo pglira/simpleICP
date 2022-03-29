@@ -1,15 +1,11 @@
 """
 Implementation of a rather simple version of the Iterative Closest Point (ICP) algorithm.
-"""
 
-"""
 Dev notes:
     - Define type hints for all parameters and return values.
     - All non-private functions and class methods should have extended docstrings, i.e. including
     parameter and return values description. For the rest single-line docstrings suffice.
 """
-
-# TODO Rename rbp (rigid-body parameters) to rbtp (rigid-body transformation parameters)
 
 import time
 from dataclasses import fields
@@ -18,6 +14,8 @@ from typing import Optional, Tuple
 import numpy as np
 
 from . import corrpts, optimization, pointcloud
+
+# TODO Rename rbp (rigid-body parameters) to rbtp (rigid-body transformation parameters)
 
 
 class SimpleICP:
@@ -57,7 +55,7 @@ class SimpleICP:
         distance_weights: Optional[float] = 1,  # can also be None
         rbp_observed_values: Tuple[float] = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         rbp_observation_weights: Tuple[float] = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-    ) -> Tuple[np.array, np.array]:
+    ) -> Tuple[np.array, np.array, optimization.RigidBodyParameters]:
         """Run simpleICP algorithm.
 
         Note: See https://github.com/pglira/simpleICP for an extended description of the algorithm
@@ -105,7 +103,7 @@ class SimpleICP:
         # Convert angle valus from degree -> radian
         rbp_observed_values = np.array(rbp_observed_values)
         for i in range(3):
-            rbp_observed_values[i] = rbp_observed_values[i]*np.pi/180
+            rbp_observed_values[i] = rbp_observed_values[i] * np.pi / 180
 
         if np.isfinite(max_overlap_distance):
 
