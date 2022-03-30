@@ -9,6 +9,7 @@ Dev notes:
 
 import time
 from dataclasses import fields
+from pathlib import Path
 from typing import Optional, Tuple
 
 import numpy as np
@@ -55,6 +56,7 @@ class SimpleICP:
         distance_weights: Optional[float] = 1,  # can also be None
         rbp_observed_values: Tuple[float] = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         rbp_observation_weights: Tuple[float] = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        debug_dirpath: str = "",
     ) -> Tuple[np.array, np.array, optimization.RigidBodyParameters]:
         """Run simpleICP algorithm.
 
@@ -87,7 +89,10 @@ class SimpleICP:
                 difference between the estimated rbp and the observed rbp. If an observation weight
                 is set to np.inf, this parameter is fixed to the observed value. Order of elements
                 is the same as in rbp_observed_values. Defaults to (0.0, 0.0, 0.0, 0.0, 0.0, 0.0).
-
+            debug_dirpath (str, optional): Path to directory for saving debug files, e.g. point
+                clouds and correspondences of each iteration. The xyz files can conveniently be
+                inspected with CloudCompare. Not considered if an empty string is passed. Defaults
+                to "".
         Returns:
             Tuple[np.array, np.array]:
                 H: Estimated homogeneous transformation matrix.
@@ -100,6 +105,10 @@ class SimpleICP:
         )
 
         start_time = time.time()
+
+        if debug_dirpath:
+            print(f'Write debug files to directory "{debug_dirpath}"')
+            Path(debug_dirpath).mkdir(parents=True, exist_ok=True)
 
         # Convert angle valus from degree -> radian
         rbp_observed_values = np.array(rbp_observed_values)
@@ -136,8 +145,6 @@ class SimpleICP:
             print("Estimate normals of selected points ...")
             self.pc1.estimate_normals(neighbors)
 
-        H = np.eye(4)
-
         distance_residuals = []
 
         print("Start iterations ...")
@@ -146,6 +153,13 @@ class SimpleICP:
             cp = corrpts.CorrPts(self.pc1, self.pc2)
 
             self.pc2.transform_by_H(H)  # temporarily transform pc2
+            if debug_dirpath:
+                self.pc1.write_xyz(
+                    Path(debug_dirpath).joinpath(f"iteration{it:03d}_pcfix.xyz")
+                )
+                self.pc2.write_xyz(
+                    Path(debug_dirpath).joinpath(f"iteration{it:03d}_pcmov.xyz")
+                )
             cp.match()
             self.pc2.transform_by_H(np.linalg.inv(H))  # undo transformation
 
@@ -153,6 +167,13 @@ class SimpleICP:
             cp.reject_wrt_planarity(min_planarity)
             cp.reject_wrt_point_to_plane_distances()
             # cp.reject_wrt_to_angle_between_normals()  # not implemented yet
+
+            if debug_dirpath:
+                cp.write_xyz(
+                    Path(debug_dirpath).joinpath(
+                        f"iteration{it:03d}_correspondences.xyz"
+                    )
+                )
 
             if it == 0:
                 initial_distances = cp.point_to_plane_distances
