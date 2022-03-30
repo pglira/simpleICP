@@ -2,6 +2,7 @@
 PointCloud class.
 """
 
+from pathlib import Path
 from typing import List, Optional
 
 import numpy as np
@@ -214,6 +215,15 @@ class PointCloud(pd.DataFrame):
         self["x"] = Xe[:, 0]
         self["y"] = Xe[:, 1]
         self["z"] = Xe[:, 2]
+
+    def write_xyz(self, file: Path):
+        """Write point cloud to xyz file.
+
+        The header corresponds to the format definition in CloudCompare.
+        """
+        self[["x", "y", "z"]].to_csv(
+            file, sep=" ", header=["//X", "Y", "Z"], index=False
+        )
 
 
 class PointCloudException(Exception):
