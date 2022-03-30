@@ -2,13 +2,14 @@
 Read two point clouds from xyz files and run simpleICP.
 """
 
+import time
 from pathlib import Path
 
 import numpy as np
 from simpleicp import PointCloud, SimpleICP
 
 # User inputs
-dataset = "all"
+dataset = "Webots"
 export_results = False
 plot_results = False
 
@@ -36,7 +37,9 @@ if dataset == "Dragon" or dataset == "all":
     print('Processing dataset "Dragon"')
     X_fix = np.genfromtxt(tests_dirpath.joinpath(Path("../../../data/dragon1.xyz")))
     X_mov = np.genfromtxt(tests_dirpath.joinpath(Path("../../../data/dragon2.xyz")))
-    kwargs = {}
+    kwargs = {
+        "debug_dirpath": str(Path("debug").joinpath(f"Dragon_{time.time()}"))
+    }
     X_mov_transformed = run_simpleicp(X_fix, X_mov, kwargs)
 
 if dataset == "Airborne Lidar" or dataset == "all":
@@ -47,7 +50,9 @@ if dataset == "Airborne Lidar" or dataset == "all":
     X_mov = np.genfromtxt(
         tests_dirpath.joinpath(Path("../../../data/airborne_lidar2.xyz"))
     )
-    kwargs = {}
+    kwargs = {
+        "debug_dirpath": str(Path("debug").joinpath(f"Airborne_Lidar_{time.time()}"))
+    }
     X_mov_transformed = run_simpleicp(X_fix, X_mov, kwargs)
 
 if dataset == "Terrestrial Lidar" or dataset == "all":
@@ -58,7 +63,9 @@ if dataset == "Terrestrial Lidar" or dataset == "all":
     X_mov = np.genfromtxt(
         tests_dirpath.joinpath(Path("../../../data/terrestrial_lidar2.xyz"))
     )
-    kwargs = {}
+    kwargs = {
+        "debug_dirpath": str(Path("debug").joinpath(f"Terrestrial_Lidar_{time.time()}"))
+    }
     X_mov_transformed = run_simpleicp(X_fix, X_mov, kwargs)
 
 if dataset == "Bunny" or dataset == "all":
@@ -67,6 +74,7 @@ if dataset == "Bunny" or dataset == "all":
     X_mov = np.genfromtxt(tests_dirpath.joinpath(Path("../../../data/bunny_part2.xyz")))
     kwargs = {
         "max_overlap_distance": 1,
+        "debug_dirpath": str(Path("debug").joinpath(f"Bunny_{time.time()}"))
     }
     X_mov_transformed = run_simpleicp(X_fix, X_mov, kwargs)
 
@@ -82,8 +90,23 @@ if dataset == "Multisensor" or dataset == "all":
         "max_overlap_distance": 1,
         "rbp_observed_values": (-0.5, 0.0, 0.0, 0.0, 0.0, 0.0),
         "rbp_observation_weights": (np.inf, np.inf, 0.0, 0.0, 0.0, 0.0),
+        "debug_dirpath": str(Path("debug").joinpath(f"Multisensor_{time.time()}"))
     }
     X_mov_transformed = run_simpleicp(X_fix, X_mov, kwargs)
+
+if dataset == "Webots" or dataset == "all":
+    print('Processing dataset "Webots"')
+    X_fix = np.genfromtxt(tests_dirpath.joinpath(Path("../../../data/webots1.xyz")))
+    X_mov = np.genfromtxt(tests_dirpath.joinpath(Path("../../../data/webots2.xyz")))
+    kwargs = {
+        "neighbors": 40,
+        "max_overlap_distance": 0.5,
+        "rbp_observed_values": (0.0, 0.0, -60.0, -0.05, -0.09, 0.0),
+        "rbp_observation_weights": (0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        "debug_dirpath": str(Path("debug").joinpath(f"Webots_{time.time()}"))
+    }
+    X_mov_transformed = run_simpleicp(X_fix, X_mov, kwargs)
+
 
 # Export original and adjusted point clouds to xyz files to check the result
 if export_results:
