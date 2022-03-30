@@ -2,6 +2,8 @@
 Class for corresponding points, i.e. correspondences.
 """
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 from scipy import spatial, stats
@@ -207,3 +209,29 @@ class CorrPts:
             point_to_plane_distances[i] = dx[i] * nx[i] + dy[i] * ny[i] + dz[i] * nz[i]
 
         self._df["point_to_plane_distances"] = point_to_plane_distances
+
+    def write_xyz(self, file: Path):
+        """Write coordinates and attributes of correspondences to xyz file.
+
+        The header corresponds to the format definition in CloudCompare.
+        """
+
+        X = np.column_stack(
+            (
+                self.pc1_x,
+                self.pc1_y,
+                self.pc1_z,
+                self.pc2_x,
+                self.pc2_y,
+                self.pc2_z,
+                self.point_to_plane_distances,
+            )
+        )
+
+        np.savetxt(
+            file,
+            X,
+            delimiter=" ",
+            header="X1 Y1 Z1 X2 Y2 Z2 point_to_plane_distance",
+            comments="//",
+        )
