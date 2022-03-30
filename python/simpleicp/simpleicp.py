@@ -13,7 +13,7 @@ from typing import Optional, Tuple
 
 import numpy as np
 
-from . import corrpts, optimization, pointcloud
+from . import corrpts, mathutils, optimization, pointcloud
 
 # TODO Rename rbp (rigid-body parameters) to rbtp (rigid-body transformation parameters)
 
@@ -79,7 +79,8 @@ class SimpleICP:
                 only sense if the rigid-body transformation parameters are observed, see the
                 following arguments. Defaults to 1.
             rbp_observed_values (Tuple[float], optional): Values of direct observation of the rigid
-                body transformation parameters. Order is alpha1, alpha2, alpha3, tx, ty, tz. Unit of
+                body transformation parameters. These values define the initial transform between
+                the two point clouds. Order is alpha1, alpha2, alpha3, tx, ty, tz. Unit of
                 alpha1/2/3: degree. Defaults to (0.0, 0.0, 0.0, 0.0, 0.0, 0.0).
             rbp_observation_weights (Tuple[float], optional): Weight factors with which the
                 residuals of the direct observations are multiplied. The residuals are defined as
@@ -105,10 +106,20 @@ class SimpleICP:
         for i in range(3):
             rbp_observed_values[i] = rbp_observed_values[i] * np.pi / 180
 
+        # Compose initial H from observed rbp values
+        H = mathutils.create_homogeneous_transformation_matrix(
+            mathutils.euler_angles_to_rotation_matrix(
+                rbp_observed_values[0], rbp_observed_values[1], rbp_observed_values[2]
+            ),
+            rbp_observed_values[3:],
+        )
+
         if np.isfinite(max_overlap_distance):
 
             print("Consider partial overlap of point clouds ...")
+            self.pc2.transform_by_H(H)  # temporarily transform pc2
             self.pc1.select_in_range(self.pc2.X, max_range=max_overlap_distance)
+            self.pc2.transform_by_H(np.linalg.inv(H))  # undo transformation
 
             if not self.pc1.num_selected_points > 0:
                 raise SimpleICPException(
@@ -134,10 +145,9 @@ class SimpleICP:
 
             cp = corrpts.CorrPts(self.pc1, self.pc2)
 
-            # We need to temporarily transform the moving point cloud for matching
-            self.pc2.transform_by_H(H)
+            self.pc2.transform_by_H(H)  # temporarily transform pc2
             cp.match()
-            self.pc2.transform_by_H(np.linalg.inv(H))
+            self.pc2.transform_by_H(np.linalg.inv(H))  # undo transformation
 
             # Rejection of possibly false correspondences
             cp.reject_wrt_planarity(min_planarity)
