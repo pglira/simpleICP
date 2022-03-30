@@ -1,4 +1,4 @@
-__version__ = "2.0.7"
+__version__ = "2.0.8"
 
 # Import statements in order to simplify API
 # Reference: https://stackoverflow.com/a/35733111
