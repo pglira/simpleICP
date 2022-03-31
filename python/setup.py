@@ -7,7 +7,7 @@ readme_filepath = (root_dirpath / "README.md").read_text()
 
 setup(
     name="simpleicp",
-    version="2.0.8",  # should match version in __init__.py
+    version="2.0.9",  # should match version in __init__.py
     description="Simple version of the Iterative Closest Point (ICP) algorithm",
     long_description=readme_filepath,
     long_description_content_type="text/markdown",
