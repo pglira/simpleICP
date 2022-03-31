@@ -262,7 +262,7 @@ class SimpleICP:
                 f"{getattr(rbp, parameter.name).estimated_value_scaled:15.6f} | "
                 f"{getattr(rbp, parameter.name).estimated_uncertainty_scaled:15.6f} | "
                 f"{getattr(rbp, parameter.name).observed_value_scaled:15.6f} | "
-                f"{getattr(rbp, parameter.name).observation_weight:15.6f}"
+                f"{getattr(rbp, parameter.name).observation_weight:15.3e}"
             )
 
         print(
