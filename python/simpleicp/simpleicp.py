@@ -168,6 +168,13 @@ class SimpleICP:
             cp.reject_wrt_point_to_plane_distances()
             # cp.reject_wrt_to_angle_between_normals()  # not implemented yet
 
+            if cp.num_corr_pts < 6:
+                raise SimpleICPException(
+                    "Too few correspondences! At least 6 correspondences are needed to estimate "
+                    "the 6 rigid body transformation parameters. The current number of "
+                    f"correspondences is {cp.num_corr_pts}."
+                )
+
             if debug_dirpath:
                 cp.write_xyz(
                     Path(debug_dirpath).joinpath(
