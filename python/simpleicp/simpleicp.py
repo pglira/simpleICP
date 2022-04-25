@@ -91,7 +91,10 @@ class SimpleICP:
                 is the same as in rbp_observed_values. Defaults to (0.0, 0.0, 0.0, 0.0, 0.0, 0.0).
             debug_dirpath (str, optional): Path to directory for saving debug files, e.g. point
                 clouds and correspondences of each iteration. The xyz files can conveniently be
-                inspected with CloudCompare. Not considered if an empty string is passed. Defaults
+                inspected with CloudCompare. Files containing the string "preoptim" correspond to
+                the state before the optimization, i.e. before the movable point cloud is
+                transformed. Accordingly, files containing the string "postoptim" correspond to the
+                state after the optimization. Not considered if an empty string is passed. Defaults
                 to "".
         Returns:
             Tuple[np.array, np.array]:
@@ -154,11 +157,16 @@ class SimpleICP:
 
             self.pc2.transform_by_H(H)  # temporarily transform pc2
             if debug_dirpath:
-                self.pc1.write_xyz(
-                    Path(debug_dirpath).joinpath(f"iteration{it:03d}_pcfix.xyz")
-                )
+                if it == 0: # write only in first iteration
+                    self.pc1.write_xyz(
+                        Path(debug_dirpath).joinpath(
+                            f"iteration{it:03d}_preoptim_pcfix.xyz"
+                        )
+                    )
                 self.pc2.write_xyz(
-                    Path(debug_dirpath).joinpath(f"iteration{it:03d}_pcmov.xyz")
+                    Path(debug_dirpath).joinpath(
+                        f"iteration{it:03d}_preoptim_pcmov.xyz"
+                    )
                 )
             cp.match()
             self.pc2.transform_by_H(np.linalg.inv(H))  # undo transformation
@@ -178,7 +186,7 @@ class SimpleICP:
             if debug_dirpath:
                 cp.write_xyz(
                     Path(debug_dirpath).joinpath(
-                        f"iteration{it:03d}_correspondences.xyz"
+                        f"iteration{it:03d}_preoptim_correspondences.xyz"
                     )
                 )
 
@@ -271,6 +279,10 @@ class SimpleICP:
 
         # Apply final transformation
         self.pc2.transform_by_H(H)
+        if debug_dirpath:
+            self.pc2.write_xyz(
+                Path(debug_dirpath).joinpath(f"iteration{it:03d}_postoptim_pcmov.xyz")
+            )
 
         print(f"Finished in {time.time() - start_time:.3f} seconds!")
 
