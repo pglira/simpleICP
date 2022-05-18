@@ -1,6 +1,11 @@
 #include "corrpts.h"
 #include "simpleicp.h"
 
+#ifdef USE_CERES
+#include "ceres/ceres.h"
+#include "ceres/rotation.h"
+#endif
+
 CorrPts::CorrPts(PointCloud &pc1, PointCloud &pc2) : pc1_{pc1}, pc2_{pc2} {}
 
 void CorrPts::Match()
@@ -88,6 +93,117 @@ void CorrPts::Reject(const double &min_planarity)
   dists_ = dists_new;
 }
 
+#ifdef USE_CERES
+struct PointToPointFunctor {
+  PointToPointFunctor(PointCloud *pcf, PointCloud *pcm, size_t i, size_t j) : pcf_(pcf), pcm_(pcm), i_(i) , j_(j) {}
+
+  template <typename T>
+  bool operator()(const T* const rbp, T* residual) const;
+
+  PointCloud *pcf_, *pcm_;
+  size_t i_, j_;
+};
+
+template <typename T>
+bool PointToPointFunctor::operator()(const T* const rbp, T* residual) const
+{
+  const Eigen::Vector3d &Xf = pcf_->X().row(i_);
+  const Eigen::Vector3d &Xm = pcm_->X().row(j_);
+
+  T X[3];
+  X[0] = T(Xm.x());
+  X[1] = T(Xm.y());
+  X[2] = T(Xm.z());
+
+  T p[3];
+  ceres::AngleAxisRotatePoint(rbp, X, p);
+  p[0] += rbp[3]; p[1] += rbp[4]; p[2] += rbp[5];
+
+  residual[0] = T(Xf.x()) - p[0];
+  residual[1] = T(Xf.y()) - p[1];
+  residual[2] = T(Xf.z()) - p[2];
+
+  return true;
+}
+
+
+struct PointToPlaneFunctor {
+  PointToPlaneFunctor(PointCloud *pcf, PointCloud *pcm, size_t i, size_t j) : pcf_(pcf), pcm_(pcm), i_(i) , j_(j) {}
+
+  template <typename T>
+  bool operator()(const T* const rbp, T* residual) const;
+
+  PointCloud *pcf_, *pcm_;
+  size_t i_, j_;
+};
+
+template <typename T>
+bool PointToPlaneFunctor::operator()(const T* const rbp, T* residual) const
+{
+  const Eigen::Vector3d &Xf = pcf_->X().row(i_);
+  const Eigen::Vector3d &Xm = pcm_->X().row(j_);
+
+  T X[3];
+  X[0] = T(Xm.x());
+  X[1] = T(Xm.y());
+  X[2] = T(Xm.z());
+
+  T p[3];
+  ceres::AngleAxisRotatePoint(rbp, X, p);
+  p[0] += rbp[3]; p[1] += rbp[4]; p[2] += rbp[5];
+
+  p[0] = T(pcf_->nx()(i_)) * (T(Xf.x()) - p[0]);
+  p[1] = T(pcf_->ny()(i_)) * (T(Xf.y()) - p[1]);
+  p[2] = T(pcf_->nz()(i_)) * (T(Xf.z()) - p[2]);
+
+  residual[0] = p[0] + p[1] + p[2];
+
+  return true;
+}
+
+void CorrPts::EstimateRigidBodyTransformation(Eigen::Matrix<double, 4, 4> &H,
+                                              Eigen::VectorXd &residuals)
+{
+  auto no_corr_pts{idx_pc1_.size()};
+
+  ceres::Problem problem;
+
+  std::array<double, 6> parameters = { 0, 0, 0, 0, 0, 0 };
+  problem.AddParameterBlock(parameters.data(), parameters.size());
+
+  for (size_t i = 0; i < no_corr_pts; ++i)
+  {
+    using Functor = PointToPlaneFunctor;
+    ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<Functor, 1, 6>(new Functor(&pc1_, &pc2_, idx_pc1_[i], idx_pc2_[i]));
+
+    problem.AddResidualBlock(cost_function, nullptr, parameters.data());
+  }
+
+  ceres::Solver::Options options;
+  ceres::Solver::Summary summary;
+  ceres::Solve(options, &problem, &summary);
+
+  Eigen::Matrix3d R;
+  Eigen::Vector3d t;
+
+  ceres::AngleAxisToRotationMatrix(parameters.data(), ceres::ColumnMajorAdapter3x3(R.data()));
+  t << parameters[3], parameters[4], parameters[5];
+
+  H = Eigen::Matrix4d::Identity();
+  H.topLeftCorner<3, 3>() = R;
+  H.topRightCorner<3, 1>() << t;
+
+  {
+    std::vector<double> residuals_vec;
+    residuals_vec.reserve(no_corr_pts);
+    ceres::Problem::EvaluateOptions eval_options;
+    eval_options.apply_loss_function = false;
+
+    problem.Evaluate(eval_options, nullptr, &residuals_vec, nullptr, nullptr);
+    residuals = Eigen::Map<const Eigen::VectorXd>(residuals_vec.data(), residuals_vec.size());
+  }
+}
+#else
 Eigen::Matrix3d EulerAnglesToRotationMatrix(float alpha1, float alpha2, float alpha3)
 {
   Eigen::Matrix3d R;
@@ -154,6 +270,7 @@ void CorrPts::EstimateRigidBodyTransformation(Eigen::Matrix<double, 4, 4> &H,
 
   residuals = A * x - l;
 }
+#endif
 
 // Getters
 const PointCloud &CorrPts::pc1() { return pc1_; }
