@@ -9,7 +9,7 @@ import numpy as np
 from simpleicp import PointCloud, SimpleICP
 
 # User inputs
-dataset = "Webots"
+dataset = "all"
 export_results = False
 plot_results = False
 
@@ -91,6 +91,24 @@ if dataset == "Multisensor" or dataset == "all":
         "rbp_observed_values": (-0.5, 0.0, 0.0, 0.0, 0.0, 0.0),
         "rbp_observation_weights": (np.inf, np.inf, 0.0, 0.0, 0.0, 0.0),
         "debug_dirpath": str(Path("debug").joinpath(f"Multisensor_{time.time()}"))
+    }
+    X_mov_transformed = run_simpleicp(X_fix, X_mov, kwargs)
+
+if dataset == "Multisensor2" or dataset == "all":
+    print('Processing dataset "Multisensor2"')
+    X_fix = np.genfromtxt(
+        tests_dirpath.joinpath(Path("../../../data/multisensor2_lidar.xyz"))
+    )
+    X_mov = np.genfromtxt(
+        tests_dirpath.joinpath(Path("../../../data/multisensor2_dim.xyz"))
+    )
+    kwargs = {
+        "max_overlap_distance": 1,
+        "min_planarity": 0.7,
+        "distance_weights": None,
+        "rbp_observed_values": (-90.0, 90.0, 0.0, 0.0, 0.7, 0.0),
+        "rbp_observation_weights": (1.0, 1.0, 1.0, 1.0, 1.0, 1.0),
+        "debug_dirpath": str(Path("debug").joinpath(f"Multisensor2_{time.time()}"))
     }
     X_mov_transformed = run_simpleicp(X_fix, X_mov, kwargs)
 
