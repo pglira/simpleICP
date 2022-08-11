@@ -129,7 +129,7 @@ class CorrPts:
         """
 
         kdtree = spatial.cKDTree(self._pc2.X_selected)
-        _, idx_nn = kdtree.query(self._pc1.X_selected, k=1, p=2, n_jobs=-1)
+        _, idx_nn = kdtree.query(self._pc1.X_selected, k=1, p=2, workers=-1)
 
         self._df["pc1_idx"] = self._pc1.idx_selected
         self._df["pc2_idx"] = self._pc2.idx_selected[idx_nn]
@@ -183,7 +183,7 @@ class CorrPts:
 
         distances = self._df["point_to_plane_distances"]
         median = np.median(distances)
-        sigma_mad = stats.median_absolute_deviation(distances)
+        sigma_mad = stats.median_abs_deviation(distances)
         keep = [abs(d - median) <= 3 * sigma_mad for d in distances]
         self._df = self._df.loc[keep][:]
 
