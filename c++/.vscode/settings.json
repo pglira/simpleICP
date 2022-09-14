@@ -1,4 +1,7 @@
 {
+    "cmake.configureSettings": {
+        "CMAKE_TOOLCHAIN_FILE": "/usr/local/vcpkg/scripts/buildsystems/vcpkg.cmake"
+    },
     "files.associations": {
         "array": "cpp",
         "bitset": "cpp",
