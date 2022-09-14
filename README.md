@@ -18,8 +18,6 @@ I've tried to optimize the readability of the code, i.e. the code structure is a
 
 The C++ version can be used through a cli interface.
 
-![C/C++ CI](https://github.com/pglira/simpleICP/workflows/C/C++%20CI/badge.svg)
-
 Also available at:
 
 - Matlab: [![View simpleICP on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/81273-simpleicp)

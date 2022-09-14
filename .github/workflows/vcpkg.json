@@ -1,9 +1,0 @@
-{
-    "name": "main",
-    "version-string": "latest",
-    "dependencies": [
-      "eigen3",
-      "cxxopts",
-      "nanoflann"
-    ]
-  }
