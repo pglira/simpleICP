@@ -19,7 +19,7 @@ jobs:
       - name: Run vcpkg
         uses: lukka/run-vcpkg@v10.4
         with:
-          vcpkgDirectory: /tmp/vcpkg
+          vcpkgGitCommitId: 34f072dfcb8b9356e6ed2c74947f87390ddb2706
           runVcpkgInstall: eigen3 cxxopts nanoflann
       - name: Build
         run: ./build.sh
