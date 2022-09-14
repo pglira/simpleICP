@@ -16,22 +16,11 @@ jobs:
         uses: actions/checkout@v2
         with:
           path: 'simpleICP'
-      - name: Checkout nanoflann
-        uses: actions/checkout@v2
+      - name: Run vcpkg
+        uses: lukka/run-vcpkg@v10.4
         with:
-          repository: 'jlblancoc/nanoflann'
-          path: 'nanoflann'
-      - name: Checkout cxxopts
-        uses: actions/checkout@v2
-        with:
-          repository: 'jarro2783/cxxopts'
-          path: 'cxxopts'
-      - name: Copy nanoflann header
-        run: cp nanoflann/include/nanoflann.hpp simpleICP/c++/src
-      - name: Copy cxxopts header
-        run: cp cxxopts/include/cxxopts.hpp simpleICP/c++/src
-      - name: Install eigen
-        run: sudo apt install libeigen3-dev
+          vcpkgGitCommitId: 34f072dfcb8b9356e6ed2c74947f87390ddb2706
+          runVcpkgInstall: eigen3 cxxopts nanoflann
       - name: Build
         run: ./build.sh
         working-directory: simpleICP/c++
