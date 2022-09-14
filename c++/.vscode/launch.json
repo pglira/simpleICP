@@ -15,7 +15,7 @@
                 "--movable",
                 "../data/bunny_part2.xyz",
                 "--max_overlap_distance",
-                "0.01"
+                "1.0"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
