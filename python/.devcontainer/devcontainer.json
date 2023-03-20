@@ -38,7 +38,8 @@
 		"njpwerner.autodocstring",
 		"gruntfuggly.todo-tree",
 		"streetsidesoftware.code-spell-checker",
-		"yzhang.markdown-all-in-one"
+		"yzhang.markdown-all-in-one",
+		"GitHub.copilot-nightly"
 	],
 
 	// Uncomment when using a ptrace-based debugger like C++, Go, and Rust
