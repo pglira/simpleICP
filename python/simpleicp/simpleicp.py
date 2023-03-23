@@ -97,10 +97,12 @@ class SimpleICP:
                 state after the optimization. Not considered if an empty string is passed. Defaults
                 to "".
         Returns:
-            Tuple[np.array, np.array]:
+            Tuple[np.array, np.array, RigidBodyParameters, np.array]:
                 H: Estimated homogeneous transformation matrix.
                 X_mov_transformed: Points of movable point cloud transformed by H.
                 rbp: Data class containing estimates of the rigid-body transformation parameters.
+                distance_residuals: Final distance residuals, i.e. residual point-to-plane distances
+                    in the last iteration.
         """
 
         self.__check_arguments(
@@ -286,7 +288,7 @@ class SimpleICP:
 
         print(f"Finished in {time.time() - start_time:.3f} seconds!")
 
-        return H, self.pc2.X, rbp
+        return H, self.pc2.X, rbp, distance_residuals[it]
 
     @staticmethod
     def __check_arguments(

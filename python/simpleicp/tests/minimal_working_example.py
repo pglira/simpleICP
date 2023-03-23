@@ -19,4 +19,4 @@ pc_mov = PointCloud(X_mov, columns=["x", "y", "z"])
 # Create simpleICP object, add point clouds, and run algorithm!
 icp = SimpleICP()
 icp.add_point_clouds(pc_fix, pc_mov)
-H, X_mov_transformed, rbp = icp.run(max_overlap_distance=1)
+H, X_mov_transformed, rbp, distance_residuals = icp.run(max_overlap_distance=1)

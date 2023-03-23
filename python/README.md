@@ -31,7 +31,7 @@ pc_mov = PointCloud(X_mov, columns=["x", "y", "z"])
 # Create simpleICP object, add point clouds, and run algorithm!
 icp = SimpleICP()
 icp.add_point_clouds(pc_fix, pc_mov)
-H, X_mov_transformed, rigid_body_transformation_params = icp.run(max_overlap_distance=1)
+H, X_mov_transformed, rigid_body_transformation_params, distance_residuals = icp.run(max_overlap_distance=1)
 ```
 
 This should give this output:
@@ -42,36 +42,37 @@ Select points for correspondences in fixed point cloud ...
 Estimate normals of selected points ...
 Start iterations ...
 iteration | correspondences | mean(residuals) |  std(residuals)
-   orig:0 |             951 |          0.0401 |          0.2397
-        1 |             950 |          0.0027 |          0.1356
-        2 |             889 |          0.0026 |          0.0586
-        3 |             897 |          0.0020 |          0.0407
-        4 |             873 |          0.0004 |          0.0303
-        5 |             854 |          0.0004 |          0.0245
-        6 |             847 |          0.0003 |          0.0208
-        7 |             826 |         -0.0006 |          0.0154
-        8 |             799 |          0.0005 |          0.0099
-        9 |             787 |          0.0002 |          0.0068
-       10 |             783 |         -0.0001 |          0.0047
-       11 |             779 |         -0.0001 |          0.0037
-       12 |             776 |         -0.0000 |          0.0033
-       13 |             776 |         -0.0000 |          0.0033
+   orig:0 |             863 |          0.0403 |          0.1825
+        1 |             862 |          0.0096 |          0.1113
+        2 |             775 |          0.0050 |          0.0553
+        3 |             807 |          0.0022 |          0.0407
+        4 |             825 |          0.0016 |          0.0346
+        5 |             825 |          0.0010 |          0.0253
+        6 |             816 |          0.0008 |          0.0198
+        7 |             785 |         -0.0000 |          0.0142
+        8 |             764 |          0.0008 |          0.0091
+        9 |             753 |          0.0003 |          0.0061
+       10 |             735 |          0.0002 |          0.0040
+       11 |             742 |         -0.0001 |          0.0032
+       12 |             747 |         -0.0000 |          0.0030
+       13 |             752 |         -0.0000 |          0.0030
+       14 |             752 |         -0.0000 |          0.0029
 Convergence criteria fulfilled -> stop iteration!
 Estimated transformation matrix H:
-[    0.984804    -0.173671    -0.000041     0.000420]
-[    0.173671     0.984804     0.000051    -0.000750]
-[    0.000032    -0.000057     1.000000     0.000054]
+[    0.984798    -0.173702    -0.000053     0.000676]
+[    0.173702     0.984798     0.000084    -0.001150]
+[    0.000038    -0.000092     1.000000     0.000113]
 [    0.000000     0.000000     0.000000     1.000000]
-... which corresponds to the following rigid body transformation parameters:
+... which corresponds to the following rigid-body transformation parameters:
 parameter |       est.value | est.uncertainty |       obs.value |      obs.weight
-   alpha1 |       -0.002906 |        0.004963 |        0.000000 |        0.000000
-   alpha2 |       -0.002353 |        0.002339 |        0.000000 |        0.000000
-   alpha3 |       10.001317 |        0.006276 |        0.000000 |        0.000000
-       tx |        0.000420 |        0.000459 |        0.000000 |        0.000000
-       ty |       -0.000750 |        0.000974 |        0.000000 |        0.000000
-       tz |        0.000054 |        0.000209 |        0.000000 |        0.000000
+   alpha1 |       -0.004804 |        0.004491 |        0.000000 |       0.000e+00
+   alpha2 |       -0.003061 |        0.002104 |        0.000000 |       0.000e+00
+   alpha3 |       10.003124 |        0.005680 |        0.000000 |       0.000e+00
+       tx |        0.000676 |        0.000418 |        0.000000 |       0.000e+00
+       ty |       -0.001150 |        0.000885 |        0.000000 |       0.000e+00
+       tz |        0.000113 |        0.000189 |        0.000000 |       0.000e+00
 (Unit of est.value, est.uncertainty, and obs.value for alpha1/2/3 is degree)
-Finished in 4.320 seconds!
+Finished in 4.737 seconds!
 ```
 
 Note that ``bunny_part1.xyz`` and ``bunny_part2.xyz`` are not included in this package. They can be downloaded (among other example files) [here](https://github.com/pglira/simpleICP/tree/master/data).
