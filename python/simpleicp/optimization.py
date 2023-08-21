@@ -6,7 +6,7 @@ from __future__ import (
     annotations,
 )  # needed for type hinting of RigidBodyParameters before it is defined
 
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, fields, field
 from typing import List, Optional, Tuple
 
 import lmfit
@@ -330,12 +330,12 @@ class Parameter:
 class RigidBodyParameters:
     """Data class for rigid body parameters."""
 
-    alpha1: Parameter = Parameter(scale_for_logging=180 / np.pi)
-    alpha2: Parameter = Parameter(scale_for_logging=180 / np.pi)
-    alpha3: Parameter = Parameter(scale_for_logging=180 / np.pi)
-    tx: Parameter = Parameter()
-    ty: Parameter = Parameter()
-    tz: Parameter = Parameter()
+    alpha1: Parameter = field(default_factory=lambda: Parameter(scale_for_logging=180 / np.pi))
+    alpha2: Parameter = field(default_factory=lambda: Parameter(scale_for_logging=180 / np.pi))
+    alpha3: Parameter = field(default_factory=lambda: Parameter(scale_for_logging=180 / np.pi))
+    tx: Parameter = field(default_factory=Parameter)
+    ty: Parameter = field(default_factory=Parameter)
+    tz: Parameter = field(default_factory=Parameter)
 
     @property
     def H(self) -> np.array:
