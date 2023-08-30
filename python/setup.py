@@ -7,7 +7,7 @@ readme_filepath = (root_dirpath / "README.md").read_text()
 
 setup(
     name="simpleicp",
-    version="2.0.12",  # should match version in __init__.py
+    version="2.0.13",  # should match version in __init__.py
     description="Simple version of the Iterative Closest Point (ICP) algorithm",
     long_description=readme_filepath,
     long_description_content_type="text/markdown",
@@ -18,7 +18,7 @@ setup(
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.11",
     ],
     packages=find_packages(exclude=("tests",)),
     install_requires=["numpy", "scipy>=1.6", "lmfit", "pandas"],
