@@ -21,7 +21,7 @@ The C++ version can be used through a cli interface.
 Also available at:
 
 - Matlab: [![View simpleICP on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/81273-simpleicp)
-- Python: [![](https://img.shields.io/pypi/v/simpleicp)](https://pypi.org/project/simpleicp) [![Downloads](https://pepy.tech/badge/simpleicp/month)](https://pepy.tech/project/simpleicp)
+- Python: [![](https://img.shields.io/pypi/v/simpleicp)](https://pypi.org/project/simpleicp) [![Downloads](https://static.pepy.tech/badge/simpleicp)](https://pepy.tech/project/simpleicp)
 
 ## Features of the ICP algorithm
 
@@ -33,16 +33,20 @@ The following basic features are implemented in all languages:
   - higher convergence speed, see e.g. [here](https://www.youtube.com/watch?v=LcghboLgTiA) and [here](https://ieeexplore.ieee.org/abstract/document/924423)
   - better final point cloud alignment (under the assumption that both point clouds are differently sampled, i.e. no real point-to-point correspondences exist)
 - Estimation of a **rigid-body transformation** (rotation + translation) for the movable point cloud. The final transformation is given as homogeneous transformation matrix H:
+
   ```
   H = [R(0,0) R(0,1) R(0,2)   tx]
       [R(1,0) R(1,1) R(1,2)   ty]
       [R(2,0) R(2,1) R(2,2)   tz]
       [     0      0      0    1]
   ```
+
   where ``R`` is the rotation matrix and ``tx``, ``ty``, and ``tz`` are the components of the translation vector. Using ``H``, the movable point cloud can be transformed with:
+
   ```
   Xt = H*X
   ```
+
   where ``X`` is a 4-by-n matrix holding in each column the homogeneous coordinates ``x``, ``y``, ``z``, ``1`` of a single point, and ``Xt`` is the resulting 4-by-n matrix with the transformed points.
 - Selection of a **fixed number of correspondences** between the fixed and the movable point cloud. Default is ``correspondences = 1000``.
 - Automatic **rejection of potentially wrong correspondences** on the basis of
@@ -186,6 +190,7 @@ For all versions the same input parameters (``correspondences``, ``neighbors``, 
 ## References
 
 Please cite related papers if you use this code:
+
 ```
 @article{glira2015a,
   title={A Correspondence Framework for ALS Strip Adjustments based on Variants of the ICP Algorithm},
