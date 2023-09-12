@@ -207,3 +207,7 @@ Please cite related papers if you use this code:
 ## Related projects
 
 - [globalICP](https://github.com/pglira/Point_cloud_tools_for_Matlab): A multi-scan ICP implementation for Matlab
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=pglira/simpleicp&type=Date)](https://star-history.com/#pglira/simpleicp&Date)
