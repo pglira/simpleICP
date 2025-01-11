@@ -185,7 +185,7 @@ class PointCloud(pd.DataFrame):
         kdtree = spatial.cKDTree(self.X)
         _, idxNN_all_qp = kdtree.query(self.X_selected, k=neighbors, p=2, workers=-1)
 
-        for (i, idxNN) in enumerate(idxNN_all_qp):
+        for i, idxNN in enumerate(idxNN_all_qp):
             selected_points = self.X[idxNN, :]
             C = np.cov(selected_points.T, bias=False)
             eig_vals, eig_vecs = np.linalg.eig(C)
@@ -222,7 +222,7 @@ class PointCloud(pd.DataFrame):
         The header corresponds to the format definition in CloudCompare.
         """
         self[["x", "y", "z"]].to_csv(
-            file, sep=" ", header=["//X", "Y", "Z"], index=False
+            file, sep=" ", header=["//X", "Y", "Z"], index=False, float_format="%.3f"
         )
 
 

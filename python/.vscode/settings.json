@@ -3,5 +3,10 @@
     "python.linting.pylintArgs": [
         "--disable=invalid-name"
     ],
-    "cSpell.enabled": false
+    "cSpell.enabled": false,
+    "python.testing.pytestArgs": [
+        "simpleicp"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }

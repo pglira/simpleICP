@@ -57,7 +57,7 @@ class SimpleICP:
         rbp_observed_values: Tuple[float] = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         rbp_observation_weights: Tuple[float] = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
         debug_dirpath: str = "",
-    ) -> Tuple[np.array, np.array, optimization.RigidBodyParameters]:
+    ) -> Tuple[np.array, np.array, optimization.RigidBodyParameters, np.array]:
         """Run simpleICP algorithm.
 
         Note: See https://github.com/pglira/simpleICP for an extended description of the algorithm
