@@ -41,12 +41,14 @@ def _enable_verbose_logging() -> None:
 class SimpleICP:
     """Class for setting up and run simpleICP."""
 
-    def __init__(self, verbose: bool = False) -> None:
+    def __init__(self, verbose: bool = True) -> None:
         """
         Constructor method.
 
         Args:
-            verbose (bool): print information about the ICP run to stdout
+            verbose (bool): print information about the ICP run to stdout. Defaults to True
+                to preserve the pre-logging behavior of simpleicp; pass verbose=False to
+                silence stdout, or configure the "simpleicp" logger directly for full control.
         """
 
         self.pc1 = None
