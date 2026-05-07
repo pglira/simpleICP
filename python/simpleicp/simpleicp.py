@@ -22,6 +22,22 @@ from . import corrpts, mathutils, optimization, pointcloud
 _log = logging.getLogger(__name__)
 
 
+def _enable_verbose_logging() -> None:
+    """Attach a stdout handler to the simpleicp package logger at INFO level.
+
+    Idempotent: re-runs (e.g. from multiple SimpleICP(verbose=True) instantiations)
+    do not stack additional handlers, which would otherwise duplicate output.
+    """
+    pkg_log = logging.getLogger(__package__)
+    pkg_log.setLevel(logging.INFO)
+    if any(getattr(h, "_simpleicp_verbose", False) for h in pkg_log.handlers):
+        return
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    handler._simpleicp_verbose = True
+    pkg_log.addHandler(handler)
+
+
 class SimpleICP:
     """Class for setting up and run simpleICP."""
 
@@ -37,10 +53,7 @@ class SimpleICP:
         self.pc2 = None
 
         if verbose:
-            _log.setLevel(logging.INFO)
-            handler = logging.StreamHandler()
-            handler.setFormatter(logging.Formatter('%(message)s'))
-            _log.addHandler(handler)
+            _enable_verbose_logging()
 
     def add_point_clouds(
         self,
