@@ -46,9 +46,7 @@ class SimpleICP:
         Constructor method.
 
         Args:
-            verbose (bool): print information about the ICP run to stdout. Defaults to True
-                to preserve the pre-logging behavior of simpleicp; pass verbose=False to
-                silence stdout, or configure the "simpleicp" logger directly for full control.
+            verbose (bool): print information about the ICP run to stdout.
         """
 
         self.pc1 = None
@@ -188,7 +186,7 @@ class SimpleICP:
 
             self.pc2.transform_by_H(H)  # temporarily transform pc2
             if debug_dirpath:
-                if it == 0: # write only in first iteration
+                if it == 0:  # write only in first iteration
                     self.pc1.write_xyz(
                         Path(debug_dirpath).joinpath(
                             f"iteration{it:03d}_preoptim_pcfix.xyz"
