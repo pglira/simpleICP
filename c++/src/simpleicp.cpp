@@ -194,6 +194,10 @@ double Std(const Eigen::VectorXd &v)
 
 double Change(const double &new_val, const double &old_val)
 {
+  if (old_val == 0.0)
+  {
+    return new_val == 0.0 ? 0.0 : INFINITY;
+  }
   return abs((new_val - old_val) / old_val * 100);
 }
 

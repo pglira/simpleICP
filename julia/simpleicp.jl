@@ -199,7 +199,12 @@ end
 
 function check_convergence_criteria(distances_new, distances_old, min_change)
 
-    change(new, old) = abs((new-old)/old*100)
+    function change(new, old)
+        if old == 0
+            return new == 0 ? 0.0 : Inf
+        end
+        return abs((new-old)/old*100)
+    end
 
     change_of_mean = change(mean(distances_new), mean(distances_old))
     change_of_std = change(std(distances_new), std(distances_old))

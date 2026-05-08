@@ -190,7 +190,15 @@ function stop = checkConvergenceCriteria(distancesNew, distancesOld, minChange)
 
   function p = change(new, old)
 
-    p = abs((new-old)/old*100);
+    if old == 0
+      if new == 0
+        p = 0;
+      else
+        p = Inf;
+      end
+    else
+      p = abs((new-old)/old*100);
+    end
 
   endfunction
 

@@ -358,6 +358,8 @@ class SimpleICP:
         """Check if the convergence criteria is met."""
 
         def change(new, old):
+            if old == 0:
+                return 0.0 if new == 0 else np.inf
             return np.abs((new - old) / old * 100)
 
         change_of_mean = change(
