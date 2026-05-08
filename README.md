@@ -14,6 +14,7 @@ Currently, an implementation is available for:
 | Julia    | [Link](julia)  | [NearestNeighbors.jl](https://github.com/KristofferC/NearestNeighbors.jl)                                                                 |
 | Matlab   | [Link](matlab) | [Statistics and Machine Learning Toolbox](https://www.mathworks.com/products/statistics.html)                                             |
 | Python   | [Link](python) | [NumPy](https://numpy.org), [SciPy](https://scipy.org), [lmfit](https://lmfit.github.io/lmfit-py/), [pandas](https://pandas.pydata.org)   |
+| Rust     | [Link](rust)   | [nalgebra](https://nalgebra.org), [kiddo](https://github.com/sdd/kiddo), [clap](https://github.com/clap-rs/clap)                          |
 
 I've tried to optimize the readability of the code, i.e. the code structure is as simple as possible and tests are rather rare.
 
@@ -61,9 +62,9 @@ The following basic features are implemented in all languages:
 
 The extended features are currently *not* implemented in all languages. The differences are documented in the following table:
 
-| Feature                                                 | C++ | Julia | Matlab | Python |
-| ------------------------------------------------------- | --- | ----- | ------ | ------ |
-| **observation of rigid-body transformation parameters** | no  | no    | no     | yes    |
+| Feature                                                 | C++ | Julia | Matlab | Python | Rust |
+| ------------------------------------------------------- | --- | ----- | ------ | ------ | ---- |
+| **observation of rigid-body transformation parameters** | no  | no    | no     | yes    | no   |
 
 #### Extended feature: **observation of rigid-body transformation parameters**
 
@@ -177,12 +178,12 @@ The test data sets are included in the [data](data) subfolder. An example call f
 
 These are the runtimes on my PC for the data sets above:
 
-| Dataset             |   C++ | Julia | Matlab | Python |
-| :------------------ | ----: | ----: | -----: | -----: |
-| *Dragon*            | 0.11s | 1.56s |  0.81s |  1.80s |
-| *Airborne Lidar*    | 1.71s | 4.55s |  9.83s |  7.08s |
-| *Terrestrial Lidar* | 1.67s | 5.09s |  9.10s |  7.67s |
-| *Bunny*             | 0.05s | 1.50s |  0.50s |  2.07s |
+| Dataset             |   C++ |  Rust | Julia | Matlab | Python |
+| :------------------ | ----: | ----: | ----: | -----: | -----: |
+| *Dragon*            | 0.11s | 0.07s | 1.92s |  0.91s |  1.86s |
+| *Airborne Lidar*    | 2.05s | 1.62s | 5.33s | 12.14s |  7.48s |
+| *Terrestrial Lidar* | 1.95s | 1.58s | 5.62s | 10.59s |  8.15s |
+| *Bunny*             | 0.06s | 0.05s | 1.96s |  0.56s |  2.15s |
 
 For all versions the same input parameters (``correspondences``, ``neighbors``, ...) are used.
 

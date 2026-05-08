@@ -10,7 +10,7 @@
 # At the end, prints a Markdown table you can paste into README.md.
 #
 # Optional env vars:
-#   IMPLS=cpp,python,julia,matlab          # subset of implementations
+#   IMPLS=cpp,rust,julia,matlab,python     # subset of implementations
 #   DATASETS=dragon,airborne,terrestrial,bunny  # subset of datasets
 
 set -euo pipefail
@@ -18,7 +18,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${REPO_ROOT}"
 
-IMPLS="${IMPLS:-cpp,julia,matlab,python}"
+IMPLS="${IMPLS:-cpp,rust,julia,matlab,python}"
 DATASETS="${DATASETS:-dragon,airborne,terrestrial,bunny}"
 
 RESULTS_FILE="$(mktemp)"
@@ -55,6 +55,18 @@ run_cpp() {
     local bin="${REPO_ROOT}/c++/build/simpleicp"
     if [[ ! -x "${bin}" ]]; then
         echo "  C++ binary missing — run scripts/build_all.sh first" >&2
+        return 1
+    fi
+    local args=(--fixed "${REPO_ROOT}/${fixed}" --movable "${REPO_ROOT}/${movable}")
+    [[ -n "${max_overlap}" ]] && args+=(--max_overlap_distance "${max_overlap}")
+    "${bin}" "${args[@]}" 2>&1
+}
+
+run_rust() {
+    local label="$1" fixed="$2" movable="$3" max_overlap="$4"
+    local bin="${REPO_ROOT}/rust/target/release/simpleicp"
+    if [[ ! -x "${bin}" ]]; then
+        echo "  Rust binary missing — run scripts/build_all.sh first" >&2
         return 1
     fi
     local args=(--fixed "${REPO_ROOT}/${fixed}" --movable "${REPO_ROOT}/${movable}")
@@ -144,9 +156,9 @@ fmt_cell() {
 }
 
 emit_table() {
-    local impls=(cpp julia matlab python)
-    local headers=("C++" "Julia" "Matlab" "Python")
-    local widths=(5 5 6 6)
+    local impls=(cpp rust julia matlab python)
+    local headers=("C++" "Rust" "Julia" "Matlab" "Python")
+    local widths=(5 5 5 6 6)
     local label_width=19
 
     echo

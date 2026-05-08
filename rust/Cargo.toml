@@ -1,0 +1,25 @@
+[package]
+name = "simpleicp"
+version = "0.2.0"
+edition = "2021"
+authors = ["Philipp Glira"]
+
+[lib]
+name = "simpleicp"
+path = "src/lib.rs"
+
+[[bin]]
+name = "simpleicp"
+path = "src/main.rs"
+
+[dependencies]
+nalgebra = "0.33"
+kiddo = "5"
+clap = { version = "4", features = ["derive"] }
+anyhow = "1"
+
+[dev-dependencies]
+approx = "0.5"
+
+[profile.release]
+lto = "thin"
