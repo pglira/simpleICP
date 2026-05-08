@@ -6,7 +6,7 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wconversion -Wshadow -Wpedantic")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -fsanitize=undefined,address")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+find_package(Eigen3 REQUIRED NO_MODULE)
 find_package(cxxopts CONFIG REQUIRED)
 find_package(nanoflann CONFIG REQUIRED)
 

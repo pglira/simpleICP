@@ -146,7 +146,7 @@ Eigen::MatrixXi KnnSearch(const Eigen::MatrixXd &X, const Eigen::MatrixXd &X_que
     std::vector<double> dists_nn(k); // not used
     nanoflann::KNNResultSet<double> resultSet(k);
     resultSet.init(&idx_nn[0], &dists_nn[0]);
-    mat_index.index->findNeighbors(resultSet, &qp[0], nanoflann::SearchParams(10));
+    mat_index.index_->findNeighbors(resultSet, &qp[0], nanoflann::SearchParameters(10));
 
     // Save indices of nn to matrix
     for (int j = 0; j < k; j++)
