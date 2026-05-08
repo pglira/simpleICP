@@ -226,7 +226,10 @@ class SimpleICP:
             else:
                 rbp_initial_values = rbp_estimated_values
 
-            # Estimate weight of distances if value is None
+            # Estimate weight of distances if value is None.
+            # Frozen after iter 0 on purpose: keeps the relative weight between
+            # distance residuals and rbp observation residuals stable across
+            # iterations, so the LS objective doesn't drift as alignment improves.
             if distance_weights is None:
                 distance_weights = 1 / (np.std(cp.point_to_plane_distances) ** 2)
 
