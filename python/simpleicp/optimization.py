@@ -115,7 +115,7 @@ class SimpleICPOptimization:
 
         # Compute unweighted distance residuals
         weighted_distance_residuals = self._optim_results.residual[
-            0 : self._cp.num_corr_pts - 1
+            0 : self._cp.num_corr_pts
         ]
         unweighted_distance_residuals = (
             weighted_distance_residuals / self._distance_weights
@@ -256,17 +256,11 @@ class SimpleICPOptimization:
         distance_weights: float,
     ) -> np.array:
         """Compute weighted residuals for point-to-plane distances between correspondences."""
-        no_correspondences = len(pc1_x)
-
         dx = pc2_x - pc1_x
         dy = pc2_y - pc1_y
         dz = pc2_z - pc1_z
 
-        distance_residuals = np.empty(no_correspondences)
-        for i in range(0, no_correspondences):
-            distance_residuals[i] = (
-                dx[i] * pc1_nx[i] + dy[i] * pc1_ny[i] + dz[i] * pc1_nz[i]
-            )
+        distance_residuals = dx * pc1_nx + dy * pc1_ny + dz * pc1_nz
 
         weighted_distance_residuals = distance_weights * distance_residuals
 

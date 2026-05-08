@@ -178,6 +178,7 @@ class SimpleICP:
             self.pc1.estimate_normals(neighbors)
 
         distance_residuals = []
+        optim: Optional[optimization.SimpleICPOptimization] = None
 
         _log.info("Start iterations ...")
         for it in range(0, max_iterations):
@@ -253,13 +254,12 @@ class SimpleICP:
                 if self.__check_convergence_criteria(
                     distance_residuals[it], distance_residuals[it - 1], min_change
                 ):
-                    optim.estimate_parameter_uncertainties()
                     _log.info("Convergence criteria fulfilled -> stop iteration!")
                     break
 
             if it == 0:
                 _log.info(
-                    f"{'iteration':>9s} | "
+                    f"{'Iteration':>9s} | "
                     f"{'correspondences':>15s} | "
                     f"{'mean(residuals)':>15s} | "
                     f"{'std(residuals)':>15s}"
@@ -276,6 +276,9 @@ class SimpleICP:
                 f"{np.mean(distance_residuals[it]):15.4f} | "
                 f"{np.std(distance_residuals[it]):15.4f}"
             )
+
+        if optim is not None:
+            optim.estimate_parameter_uncertainties()
 
         _log.info("Estimated transformation matrix H:")
         _log.info(f"[{H[0, 0]:12.6f} {H[0, 1]:12.6f} {H[0, 2]:12.6f} {H[0, 3]:12.6f}]")
