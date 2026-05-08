@@ -180,10 +180,10 @@ These are the runtimes on my PC for the data sets above:
 
 | Dataset             |   C++ | Julia | Matlab | Octave* | Python |
 | :------------------ | ----: | ----: | -----: | ------: | -----: |
-| *Dragon*            | 0.16s | 3.99s |  1.34s |   95.7s |  4.51s |
-| *Airborne Lidar*    | 3.98s | 5.38s | 15.08s |       - | 16.49s |
-| *Terrestrial Lidar* | 3.62s | 5.22s | 13.24s |       - | 14.45s |
-| *Bunny*             | 0.13s | 0.38s |  0.37s |   72.8s |  4.20s |
+| *Dragon*            | 0.11s | 1.56s |  0.81s |       - |  1.80s |
+| *Airborne Lidar*    | 1.71s | 4.55s |  9.83s |       - |  7.08s |
+| *Terrestrial Lidar* | 1.67s | 5.09s |  9.10s |       - |  7.67s |
+| *Bunny*             | 0.05s | 1.50s |  0.50s |       - |  2.07s |
 
 For all versions the same input parameters (``correspondences``, ``neighbors``, ...) are used.
 
