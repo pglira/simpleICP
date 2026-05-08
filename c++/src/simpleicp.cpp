@@ -161,7 +161,7 @@ double Median(const Eigen::VectorXd &v)
 {
   // VectorXd --> vector<double>
   std::vector<double> vv(v.size());
-  for (int i = 1; i < v.size(); i++)
+  for (int i = 0; i < v.size(); i++)
   {
     vv[i] = v[i];
   }
@@ -178,7 +178,7 @@ double MAD(const Eigen::VectorXd &v)
 {
   auto med{Median(v)};
   Eigen::VectorXd dmed(v.size());
-  for (int i = 1; i < v.size(); i++)
+  for (int i = 0; i < v.size(); i++)
   {
     dmed[i] = abs(v[i] - med);
   }

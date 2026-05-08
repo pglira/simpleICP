@@ -79,7 +79,7 @@ void PointCloud::SelectNPts(const uint &n)
   if (n < sel_idx.size())
   {
     // Deactivate all points first
-    for (long i = 1; i < NoPts(); i++)
+    for (long i = 0; i < NoPts(); i++)
     {
       sel_[i] = false;
     }
