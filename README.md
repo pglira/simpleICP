@@ -4,6 +4,8 @@
 
 This repo contains implementations of a rather simple version of the [Iterative Closest Point (ICP) algorithm](https://en.wikipedia.org/wiki/Iterative_closest_point) in various languages.
 
+> **Note:** simpleICP is point-to-plane ICP and only supports **3D** point clouds. 2D data is not supported (adding a constant z column does not work, since the resulting normals are degenerate).
+
 Currently, an implementation is available for:
 
 | Language | Code           | Main dependencies                                                                                                                         |
