@@ -5,8 +5,6 @@ c++/cmake-build-*/
 c++/src/cxxopts.hpp
 c++/src/nanoflann.hpp
 julia/check/
-octave/check/
-octave/octave-workspace
 python/__pycache__/
 python/build/
 python/check/

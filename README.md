@@ -13,7 +13,6 @@ Currently, an implementation is available for:
 | C++      | [Link](c++)    | [nanoflann](https://github.com/jlblancoc/nanoflann), [Eigen](http://eigen.tuxfamily.org), [cxxopts](https://github.com/jarro2783/cxxopts) |
 | Julia    | [Link](julia)  | [NearestNeighbors.jl](https://github.com/KristofferC/NearestNeighbors.jl)                                                                 |
 | Matlab   | [Link](matlab) | [Statistics and Machine Learning Toolbox](https://www.mathworks.com/products/statistics.html)                                             |
-| Octave   | [Link](octave) |                                                                                                                                           |
 | Python   | [Link](python) | [NumPy](https://numpy.org), [SciPy](https://scipy.org), [lmfit](https://lmfit.github.io/lmfit-py/), [pandas](https://pandas.pydata.org)   |
 
 I've tried to optimize the readability of the code, i.e. the code structure is as simple as possible and tests are rather rare.
@@ -62,9 +61,9 @@ The following basic features are implemented in all languages:
 
 The extended features are currently *not* implemented in all languages. The differences are documented in the following table:
 
-| Feature                                                 | C++ | Julia | Matlab | Octave | Python |
-| ------------------------------------------------------- | --- | ----- | ------ | ------ | ------ |
-| **observation of rigid-body transformation parameters** | no  | no    | no     | no     | yes    |
+| Feature                                                 | C++ | Julia | Matlab | Python |
+| ------------------------------------------------------- | --- | ----- | ------ | ------ |
+| **observation of rigid-body transformation parameters** | no  | no    | no     | yes    |
 
 #### Extended feature: **observation of rigid-body transformation parameters**
 
@@ -178,16 +177,14 @@ The test data sets are included in the [data](data) subfolder. An example call f
 
 These are the runtimes on my PC for the data sets above:
 
-| Dataset             |   C++ | Julia | Matlab | Octave* | Python |
-| :------------------ | ----: | ----: | -----: | ------: | -----: |
-| *Dragon*            | 0.11s | 1.56s |  0.81s |       - |  1.80s |
-| *Airborne Lidar*    | 1.71s | 4.55s |  9.83s |       - |  7.08s |
-| *Terrestrial Lidar* | 1.67s | 5.09s |  9.10s |       - |  7.67s |
-| *Bunny*             | 0.05s | 1.50s |  0.50s |       - |  2.07s |
+| Dataset             |   C++ | Julia | Matlab | Python |
+| :------------------ | ----: | ----: | -----: | -----: |
+| *Dragon*            | 0.11s | 1.56s |  0.81s |  1.80s |
+| *Airborne Lidar*    | 1.71s | 4.55s |  9.83s |  7.08s |
+| *Terrestrial Lidar* | 1.67s | 5.09s |  9.10s |  7.67s |
+| *Bunny*             | 0.05s | 1.50s |  0.50s |  2.07s |
 
 For all versions the same input parameters (``correspondences``, ``neighbors``, ...) are used.
-
-**\*** Unfortunately, I haven't found an implementation of a kd tree in Octave (it is not yet implemented in the [Statistics](https://wiki.octave.org/Statistics_package) package). Thus, a (very time-consuming!) exhaustive nearest neighbor search is used instead. For larger datasets the Octave timings are missing, as the distance matrix does not fit into memory.
 
 ## References
 

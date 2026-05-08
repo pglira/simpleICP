@@ -12,11 +12,6 @@
 # Optional env vars:
 #   IMPLS=cpp,python,julia,matlab          # subset of implementations
 #   DATASETS=dragon,airborne,terrestrial,bunny  # subset of datasets
-#
-# Octave is excluded from the default IMPLS list because its exhaustive
-# O(n^2) NN search OOMs on every dataset we ship (the user has hit OOM
-# requiring a PC restart). To run it anyway, set IMPLS=octave explicitly
-# and only use small datasets — even Bunny (~20k pts) can OOM.
 
 set -euo pipefail
 
@@ -110,35 +105,11 @@ run_matlab() {
     matlab -batch "addpath('${REPO_ROOT}/matlab'); XFix = dlmread('${REPO_ROOT}/${fixed}'); XMov = dlmread('${REPO_ROOT}/${movable}'); simpleicp(XFix, XMov${extra});" 2>&1
 }
 
-run_octave() {
-    local label="$1" fixed="$2" movable="$3" max_overlap="$4"
-    local extra=""
-    [[ -n "${max_overlap}" ]] && extra=", 'maxOverlapDistance', ${max_overlap}"
-    octave --no-gui --quiet --eval "pkg load statistics; addpath('${REPO_ROOT}/octave'); XFix = dlmread('${REPO_ROOT}/${fixed}'); XMov = dlmread('${REPO_ROOT}/${movable}'); simpleicp(XFix, XMov${extra});" 2>&1
-}
-
-should_skip() {
-    # Hard guard: never run Octave on the large lidar datasets. Exhaustive
-    # O(n^2) NN search at 1.3M points triggers OOM that has crashed user PCs.
-    # (Octave is also excluded from the default IMPLS list — opt-in only.)
-    local impl="$1" dataset_key="$2"
-    if [[ "${impl}" == "octave" ]] && [[ "${dataset_key}" == "airborne" || "${dataset_key}" == "terrestrial" ]]; then
-        return 0
-    fi
-    return 1
-}
-
 run_one() {
     local impl="$1" dataset_key="$2"
     local meta label fixed movable max_overlap output elapsed
     meta="$(dataset_meta "${dataset_key}")"
     IFS='|' read -r label fixed movable max_overlap <<<"${meta}"
-
-    if should_skip "${impl}" "${dataset_key}"; then
-        echo "==> [${impl}] ${label}: SKIPPED"
-        echo -e "${dataset_key}\t${impl}\t-" >>"${RESULTS_FILE}"
-        return
-    fi
 
     echo "==> [${impl}] ${label}"
     if output="$("run_${impl}" "${label}" "${fixed}" "${movable}" "${max_overlap}")"; then
@@ -159,18 +130,12 @@ run_one() {
 }
 
 # Format a cell from a TSV lookup, padded to a fixed width and ending in 's'.
-# Treat missing Octave cells as "-" (matches README convention since Octave
-# is excluded from default IMPLS but the column header still appears).
 fmt_cell() {
     local impl="$1" dataset_key="$2" width="$3"
     local raw
     raw="$(awk -F'\t' -v d="${dataset_key}" -v i="${impl}" '$1==d && $2==i {print $3}' "${RESULTS_FILE}")"
     if [[ -z "${raw}" ]]; then
-        if [[ "${impl}" == "octave" ]]; then
-            printf "%${width}s" "-"
-        else
-            printf "%${width}s" "?"
-        fi
+        printf "%${width}s" "?"
     elif [[ "${raw}" == "-" || "${raw}" == "ERR" ]]; then
         printf "%${width}s" "${raw}"
     else
@@ -179,9 +144,9 @@ fmt_cell() {
 }
 
 emit_table() {
-    local impls=(cpp julia matlab octave python)
-    local headers=("C++" "Julia" "Matlab" "Octave*" "Python")
-    local widths=(5 5 6 7 6)
+    local impls=(cpp julia matlab python)
+    local headers=("C++" "Julia" "Matlab" "Python")
+    local widths=(5 5 6 6)
     local label_width=19
 
     echo

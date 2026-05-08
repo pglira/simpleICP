@@ -1,12 +1,11 @@
 # Unified devcontainer
 
-A single devcontainer for all simpleICP language implementations: C++, Python, Octave, Julia, Rust, and MATLAB.
+A single devcontainer for all simpleICP language implementations: C++, Python, Julia, Rust, and MATLAB.
 
 ## What's installed
 
 - **C++**: `g++`, CMake, Ninja, `clangd`, vcpkg with `eigen3`, `cxxopts`, `nanoflann`. `VCPKG_ROOT` is set. The `postCreateCommand` runs CMake configure with `-DCMAKE_EXPORT_COMPILE_COMMANDS=ON` so the clangd extension picks up `c++/build/compile_commands.json` automatically.
 - **Python 3**: `numpy`, `scipy`, `pandas`, `lmfit`, `matplotlib`, `pytest`. The `simpleicp` package is installed in editable mode from `python/` on container create.
-- **Octave**: `octave` plus `octave-statistics`.
 - **Julia**: `MultivariateStats`, `NearestNeighbors`, `StatsBase` precompiled in a shared depot at `/opt/julia-depot`.
 - **Rust**: `rustup` stable toolchain, system-wide.
 - **MATLAB**: installed via `mpm` together with the Statistics and Machine Learning Toolbox.

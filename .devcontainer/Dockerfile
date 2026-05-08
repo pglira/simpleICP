@@ -1,6 +1,6 @@
 # Unified devcontainer for all simpleICP language implementations.
 # Provides: C++ (g++/CMake/clangd/vcpkg with eigen3, cxxopts, nanoflann),
-# Python 3, Octave, Julia, Rust, and MATLAB (via mpm).
+# Python 3, Julia, Rust, and MATLAB (via mpm).
 #
 # Note: linux/amd64 only. The MATLAB mpm binary is x86_64.
 # On Apple Silicon hosts, run with --platform=linux/amd64.
@@ -13,12 +13,11 @@ ARG MATLAB_RELEASE
 ARG JULIA_VERSION=1.10.4
 ARG MATLAB_INSTALL_LOCATION=/opt/matlab
 
-# --- Build tools, Python, Octave, X11 libs for MATLAB activation GUI ---
+# --- Build tools, Python, X11 libs for MATLAB activation GUI ---
 RUN apt-get update && apt-get install -y --no-install-recommends \
         sudo curl wget git ca-certificates xz-utils zip unzip locales gnupg \
         build-essential cmake ninja-build pkg-config gdb clangd \
         python3 python3-pip python3-venv \
-        octave octave-statistics \
         libxt6 libxtst6 libxext6 libxrender1 libxi6 libxrandr2 \
         libgl1 libegl1 libxkbcommon0 libfontconfig1 \
     && locale-gen en_US.UTF-8 \

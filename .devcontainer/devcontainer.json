@@ -29,7 +29,6 @@
                 "rust-lang.rust-analyzer",
                 "tamasfe.even-better-toml",
                 "julialang.language-julia",
-                "toasty-technologies.octave",
                 "MathWorks.language-matlab",
                 "Anthropic.claude-code"
             ],
