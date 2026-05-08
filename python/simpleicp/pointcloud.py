@@ -111,11 +111,11 @@ class PointCloud(pd.DataFrame):
 
     def select_all_points(self) -> None:
         """Select all points."""
-        self["selected"].values[:] = True
+        self.loc[:, "selected"] = True
 
     def unselect_all_points(self) -> None:
         """Unselect all points."""
-        self["selected"].values[:] = False
+        self.loc[:, "selected"] = False
 
     def select_by_indices(self, indices: List[int]) -> None:
         """Select points by a list of indices.
