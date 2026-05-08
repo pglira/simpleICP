@@ -15,4 +15,5 @@ python/dist/
 python/simpleicp.egg-info/
 python/simpleicp/__pycache__/
 python/simpleicp/tests/__pycache__/
+python/simpleicp/tests/debug/
 rust/
