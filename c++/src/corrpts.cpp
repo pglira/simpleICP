@@ -88,7 +88,7 @@ void CorrPts::Reject(const double &min_planarity)
   dists_ = dists_new;
 }
 
-Eigen::Matrix3d EulerAnglesToRotationMatrix(float alpha1, float alpha2, float alpha3)
+Eigen::Matrix3d EulerAnglesToRotationMatrix(double alpha1, double alpha2, double alpha3)
 {
   Eigen::Matrix3d R;
   R <<
